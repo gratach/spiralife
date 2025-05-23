@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+
+[project]
+name = "spiralife"
+version = "0.0.1"
+description = "A spiral calendar"
+dependencies = [
+    "pillow",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+spiralife = "spiralife:main"
+
