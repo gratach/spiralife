@@ -17,6 +17,7 @@ Options:
     -d, --start_day=INT          The start day of the calendar. Default: 1
     -t, --total_days=INT         The total number of days in the calendar. Default: 36526
     -r, --rotation_constant=INT  The rotation constant of the spiral. Default: 630
+    -l, --language=STRING        The language for month names (e.g., en, de, fr, es). Default: en
         --special_day_year=INT   The year of the special day. Default: 2000
         --special_day_month=INT  The month of the special day. Default: 1
         --special_day_day=INT    The day of the special day. Default: 1
@@ -40,8 +41,8 @@ def main(*args):
         # Short options are single characters preceded by '-', long options are words preceded by '--'
         # Options requiring an argument are followed by ':' (e.g., "o:")
         try:
-            options_list, remaining_args = getopt(argv[1:], "o:h:w:u:i:y:m:d:t:r:", [ 
-                "output_file=", 
+            options_list, remaining_args = getopt(argv[1:], "o:h:w:u:i:y:m:d:t:r:l:", [
+                "output_file=",
                 "height=",
                 "width=",
                 "unit=",
@@ -51,6 +52,7 @@ def main(*args):
                 "start_day=",
                 "total_days=",
                 "rotation_constant=",
+                "language=",
                 "special_day_year=",
                 "special_day_month=",
                 "special_day_day=",
@@ -83,6 +85,7 @@ def main(*args):
             "start_day": int(options_dictionary.get("--start_day", options_dictionary.get("-d", 1))),
             "total_days": int(options_dictionary.get("--total_days", options_dictionary.get("-t", 36526))),
             "rotation_constant": int(options_dictionary.get("--rotation_constant", options_dictionary.get("-r", 630))),
+            "language": options_dictionary.get("--language", options_dictionary.get("-l", "en")).lower(),
             "special_day_year": int(options_dictionary.get("--special_day_year", 2000)),
             "special_day_month": int(options_dictionary.get("--special_day_month", 1)),
             "special_day_day": int(options_dictionary.get("--special_day_day", 1)),

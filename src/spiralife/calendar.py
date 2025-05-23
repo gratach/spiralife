@@ -3,6 +3,13 @@ from datetime import datetime, timedelta
 from PIL import Image
 from pathlib import Path
 
+MONTH_NAMES = {
+    "en": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "de": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+    "fr": ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"],
+    "es": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+}
+
 def create_calendar(parameters):
     """
     Create a spiralife calendar SVG image.
@@ -26,6 +33,7 @@ def create_calendar(parameters):
             "output_file" (str, optional): Name of the output SVG file. Defaults to "calendar.svg".
             "total_days" (int, optional): Total number of days to display in the calendar. Defaults to 36526 (approx. 100 years).
             "rotation_constant" (float, optional): Constant affecting the spiral's rotation tightness. Defaults to 630.
+            "language" (str, optional): Language for month names (e.g., "en", "de", "fr", "es"). Defaults to "en".
     """
     print(parameters)
     image_height = parameters["image_height"] if "image_height" in parameters else 1500
@@ -43,6 +51,10 @@ def create_calendar(parameters):
     output_file = parameters["output_file"] if "output_file" in parameters else "calendar.svg"
     total_days = parameters["total_days"] if "total_days" in parameters else 36526 # ~ 365.25 * 100
     rotation_constant = parameters["rotation_constant"] if "rotation_constant" in parameters else 630
+    language = parameters.get("language", "en")
+
+    # Select month names based on language, default to English
+    current_month_names = MONTH_NAMES.get(language, MONTH_NAMES["en"])
 
     def calculate_midpoint(point1_x, point1_y, point2_x, point2_y, factor):
         """
@@ -259,7 +271,7 @@ def create_calendar(parameters):
 
     # Color definitions
     weekday_colors = [[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[130, 255, 100],[255, 100, 15]] # Colors for days of the week
-    month_names = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"] # German month abbreviations for display
+    # month_names is now current_month_names, selected based on language parameter
     month_colors = [[2, 100, 255],[44, 120, 210],[33, 180, 100],[100, 240, 120],[230, 222, 90],[255, 140, 0],[255, 0, 0],[190, 180, 0],[200, 180, 100],[190, 210, 100],[150, 150, 150],[70, 90, 120]] # Colors for months
     
     one_day_delta = timedelta(1) # Timedelta for one day, used to increment current_date
@@ -322,7 +334,7 @@ def create_calendar(parameters):
 
         # Add text elements for the first three letters of the month name on the first three days of the month
         if current_date.day < 4: # 1st, 2nd, 3rd day of the month
-            text_elements.append((center_x, center_y, month_names[current_date.month - 1][current_date.day - 1], left_to_right_text_rotation_angle, 6, [0,0,0])) # Black text
+            text_elements.append((center_x, center_y, current_month_names[current_date.month - 1][current_date.day - 1], left_to_right_text_rotation_angle, 6, [0,0,0])) # Black text
         
         # Add text elements for year digits on days 5 through 8 of a month
         if current_date.day in range(5, 9): # 5th, 6th, 7th, 8th day of the month
