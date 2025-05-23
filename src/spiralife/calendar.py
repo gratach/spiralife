@@ -20,12 +20,25 @@ def create_calendar(parameters):
     special_day_day = parameters["special_day_day"] if "special_day_day" in parameters else 1
     special_day = datetime(special_day_year, special_day_month, special_day_day)
     output_file = parameters["output_file"] if "output_file" in parameters else "calendar.svg"
+    total_days = parameters["total_days"] if "total_days" in parameters else 36526 # ~ 365.25 * 100
+    rotation_constant = parameters["rotation_constant"] if "rotation_constant" in parameters else 630
 
     #def spiral(xm, ym, w, )
 
     def mitte(x1, y1, x2, y2, p):
+        """
+        Calculate a point on the line between two points (x1, y1) and (x2, y2).
+        The point is calculated by the parameter p, which is a value between 0 and 1 and
+        represents the distance from the calculated point to the first point (x1, y1) in 
+        relation to the distance between the two points.
+        """
         return (x1 + (x2 - x1) * p, y1 + (y2 - y1) * p)
     def quadratproj(x, y, b, h):
+        """
+        Project a point (x, y) onto the edges of a rectangle with width b and height h.
+        The rectangle is centered at the origin (0, 0).
+        The function returns the projected point (xq, yq).
+        """
         if x == 0 and y == 0:
             return (0, 0)
         b = b / 2
@@ -36,6 +49,11 @@ def create_calendar(parameters):
         yq = y * sc
         return (xq, yq)
     def quadmach(x, y, b, h):
+        """
+        Projects a point within a circle of radius 1 onto a rectangle with width b and height h.
+        The closer the point is to the edge of the circle, the more it is adapted to the rectangular shape.
+        The function returns the projected point (xq, yq) within the rectangle.
+        """
         (xp, yp) = quadratproj(x, y, b, h)
         b = b / 2
         h = h / 2
@@ -89,12 +107,12 @@ def create_calendar(parameters):
     xap = 0
     yap = 0
     w = 0
-    st = 36526
+    #total_days = 36526 # ~ 365.25 * 100
     z = 0
     pf = 0
-    zs = 1 / st
-    dr = 630
-    br = 2*pi / dr * 0.85
+    zs = 1 / total_days
+    # rotation_constant = 630 
+    br = 2*pi / rotation_constant * 0.85
     f = [[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[130, 255, 100],[255, 100, 15]]
     mn = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"]
     mf = [[2, 100, 255],[44, 120, 210],[33, 180, 100],[100, 240, 120],[230, 222, 90],[255, 140, 0],[255, 0, 0],[190, 180, 0],[200, 180, 100],[190, 210, 100],[150, 150, 150],[70, 90, 120]]
@@ -104,7 +122,7 @@ def create_calendar(parameters):
     newy = []
     tex = []
     takt = []
-    for i in range(st + 800):
+    for i in range(total_days + 800):
         xn = sin(w) * pf
         yn = cos(w) * pf
         xnp = sin(w) * (pf + br)
@@ -147,7 +165,7 @@ def create_calendar(parameters):
         yap = ynp
         z += zs
         pf = sqrt(z)
-        w = pf * dr
+        w = pf * rotation_constant
         dt += td
         
     for y in takt:
