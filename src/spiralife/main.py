@@ -2,6 +2,8 @@
 from .calendar import create_calendar
 from sys import argv
 from getopt import getopt
+
+# Help string detailing command-line usage and options
 helpstring = """
 This script creates a spiral calendar
 Usage: spiralife [OPTIONS]
@@ -21,45 +23,71 @@ Options:
         --special_day_day=INT    The day of the special day. Default: 1
         --help                   Show this help message
 """
+
 def main(*args):
-    calendar_args = {}
+    """
+    Main function to parse command-line arguments and generate the spiral calendar.
+
+    The function can accept arguments directly as a dictionary (primarily for testing or programmatic use)
+    or parse them from sys.argv using getopt.
+    """
+    calendar_parameters = {} # Dictionary to hold parameters for the create_calendar function
+
+    # Check if arguments are passed directly as a dictionary
     if len(args) != 0 and isinstance(args[0], dict):
-        calendar_args = args[0]
+        calendar_parameters = args[0]
     else:
-        optlist, args = getopt(argv[1:], "o:h:w:u:i:y:m:d:t:r:", [ 
-            "output_file=", 
-            "height=",
-            "width=",
-            "unit=",
-            "input_image=",
-            "start_year=",
-            "start_month=",
-            "start_day=",
-            "total_days=",
-            "rotation_constant=",
-            "special_day_year=",
-            "special_day_month=",
-            "special_day_day=",
-            "help"
-            ])
-        optdict = dict(optlist)
-        if "--help" in optdict or len(argv) == 1:
+        # Parse command-line arguments using getopt
+        # Short options are single characters preceded by '-', long options are words preceded by '--'
+        # Options requiring an argument are followed by ':' (e.g., "o:")
+        try:
+            options_list, remaining_args = getopt(argv[1:], "o:h:w:u:i:y:m:d:t:r:", [ 
+                "output_file=", 
+                "height=",
+                "width=",
+                "unit=",
+                "input_image=",
+                "start_year=",
+                "start_month=",
+                "start_day=",
+                "total_days=",
+                "rotation_constant=",
+                "special_day_year=",
+                "special_day_month=",
+                "special_day_day=",
+                "help"
+                ])
+        except getopt.GetoptError as err:
+            # Print error message and help string if argument parsing fails
+            print(err) 
             print(helpstring)
             return
-        calendar_args = {
-            "output_file": optdict.get("--output_file", optdict.get("-o", "calendar.svg")),
-            "image_height": int(optdict.get("--height", optdict.get("-h", 1500))),
-            "image_width": int(optdict.get("--width", optdict.get("-w", 2000))),
-            "image_unit": optdict.get("--unit", optdict.get("-u", "px")),
-            "input_image": optdict.get("--input_image", optdict.get("-i", None)),
-            "start_year": int(optdict.get("--start_year", optdict.get("-y", 2000))),
-            "start_month": int(optdict.get("--start_month", optdict.get("-m", 1))),
-            "start_day": int(optdict.get("--start_day", optdict.get("-d", 1))),
-            "total_days": int(optdict.get("--total_days", optdict.get("-t", 36526))),
-            "rotation_constant": int(optdict.get("--rotation_constant", optdict.get("-r", 630))),
-            "special_day_year": int(optdict.get("--special_day_year", 2000)),
-            "special_day_month": int(optdict.get("--special_day_month", 1)),
-            "special_day_day": int(optdict.get("--special_day_day", 1)),
+
+        # Convert the list of (option, value) tuples from getopt into a dictionary
+        options_dictionary = dict(options_list)
+
+        # If "--help" is requested or no arguments are provided, print help and exit
+        if "--help" in options_dictionary or len(argv) == 1:
+            print(helpstring)
+            return
+
+        # Populate calendar_parameters from the parsed options_dictionary
+        # Uses .get() with defaults for both long and short option forms, and then a final default value
+        calendar_parameters = {
+            "output_file": options_dictionary.get("--output_file", options_dictionary.get("-o", "calendar.svg")),
+            "image_height": int(options_dictionary.get("--height", options_dictionary.get("-h", 1500))),
+            "image_width": int(options_dictionary.get("--width", options_dictionary.get("-w", 2000))),
+            "image_unit": options_dictionary.get("--unit", options_dictionary.get("-u", "px")),
+            "input_image": options_dictionary.get("--input_image", options_dictionary.get("-i", None)),
+            "start_year": int(options_dictionary.get("--start_year", options_dictionary.get("-y", 2000))),
+            "start_month": int(options_dictionary.get("--start_month", options_dictionary.get("-m", 1))),
+            "start_day": int(options_dictionary.get("--start_day", options_dictionary.get("-d", 1))),
+            "total_days": int(options_dictionary.get("--total_days", options_dictionary.get("-t", 36526))),
+            "rotation_constant": int(options_dictionary.get("--rotation_constant", options_dictionary.get("-r", 630))),
+            "special_day_year": int(options_dictionary.get("--special_day_year", 2000)),
+            "special_day_month": int(options_dictionary.get("--special_day_month", 1)),
+            "special_day_day": int(options_dictionary.get("--special_day_day", 1)),
         }
         
-    create_calendar(calendar_args)
+    # Call the function to create the calendar with the determined parameters
+    create_calendar(calendar_parameters)
