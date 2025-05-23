@@ -1,7 +1,8 @@
 from math import sin, cos, sqrt, pi
 from datetime import datetime, timedelta
-from PIL import Image
+# from PIL import Image # Commenting out PIL
 from pathlib import Path
+import cairo
 
 def create_calendar(parameters):
     """
@@ -36,6 +37,8 @@ def create_calendar(parameters):
     start_day = parameters["start_day"] if "start_day" in parameters else 1
     current_date = datetime(start_year, start_month, start_day)
     input_image_path = parameters["input_image"] if "input_image" in parameters else None
+    # Ensure input_image_object is None if PIL is not used
+    input_image_object = None
     special_day_year = parameters["special_day_year"] if "special_day_year" in parameters else 2000
     special_day_month = parameters["special_day_month"] if "special_day_month" in parameters else 1
     special_day_day = parameters["special_day_day"] if "special_day_day" in parameters else 1
@@ -163,7 +166,7 @@ def create_calendar(parameters):
         """
         return ((color_rgb[0] + 128)%256,(color_rgb[1] + 128)%256,(color_rgb[2] + 128)%256)
 
-    def format_color_string(color_rgb):
+    def format_color_string(color_rgb): # This function is not used by Cairo version, but kept for original version compatibility if needed
         """
         Formats an RGB color tuple into a six-character hexadecimal color string (e.g., "RRGGBB").
 
@@ -175,33 +178,33 @@ def create_calendar(parameters):
         """
         return to_hex_string(color_rgb[0]) + to_hex_string(color_rgb[1]) + to_hex_string(color_rgb[2])
 
-    input_image_object = Image.open(input_image_path) if input_image_path else None
-    if input_image_object:
-        input_image_width_minus_one = input_image_object.width - 1
-        input_image_height_minus_one = input_image_object.height - 1
-        def get_image_pixel_color(point_coordinates):
-            """
-            Gets the color of a pixel from the input image at normalized coordinates.
+    # input_image_object = Image.open(input_image_path) if input_image_path else None # Commenting out PIL
+    # if input_image_object: # Commenting out PIL
+    #     input_image_width_minus_one = input_image_object.width - 1
+    #     input_image_height_minus_one = input_image_object.height - 1
+    #     def get_image_pixel_color(point_coordinates):
+    #         """
+    #         Gets the color of a pixel from the input image at normalized coordinates.
 
-            Args:
-                point_coordinates (tuple): A tuple (x, y) of coordinates normalized
-                                           to the image dimensions (-image_width/2 to +image_width/2,
-                                           -image_height/2 to +image_height/2).
+    #         Args:
+    #             point_coordinates (tuple): A tuple (x, y) of coordinates normalized
+    #                                        to the image dimensions (-image_width/2 to +image_width/2,
+    #                                        -image_height/2 to +image_height/2).
 
-            Returns:
-                tuple: An RGB tuple representing the color of the pixel, or None if no image.
-            """
-            # Normalize coordinates from SVG space to image pixel space (0-1 range)
-            norm_x = (point_coordinates[0] / image_width + 0.5)
-            norm_y = (point_coordinates[1] / image_height + 0.5)
+    #         Returns:
+    #             tuple: An RGB tuple representing the color of the pixel, or None if no image.
+    #         """
+    #         # Normalize coordinates from SVG space to image pixel space (0-1 range)
+    #         norm_x = (point_coordinates[0] / image_width + 0.5)
+    #         norm_y = (point_coordinates[1] / image_height + 0.5)
             
-            # Clamp normalized coordinates to be within [0, 1]
-            norm_x = norm_x if norm_x < 1 else 1
-            norm_x = norm_x if norm_x > 0 else 0
-            norm_y = norm_y if norm_y < 1 else 1
-            norm_y = norm_y if norm_y > 0 else 0
+    #         # Clamp normalized coordinates to be within [0, 1]
+    #         norm_x = norm_x if norm_x < 1 else 1
+    #         norm_x = norm_x if norm_x > 0 else 0
+    #         norm_y = norm_y if norm_y < 1 else 1
+    #         norm_y = norm_y if norm_y > 0 else 0
             
-            return input_image_object.getpixel((norm_x * input_image_width_minus_one, norm_y * input_image_height_minus_one))
+    #         return input_image_object.getpixel((norm_x * input_image_width_minus_one, norm_y * input_image_height_minus_one))
 
     def add_color_values(val1, val2):
         """
@@ -231,19 +234,13 @@ def create_calendar(parameters):
         return [add_color_values(color1_rgb[i], color2_rgb[i]) for i in range(3)]
         
         
-    # Initialize SVG string with header and viewbox settings
-    svg_string = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <svg
-    viewBox="{x} {y} {width} {height}"
-    height="{height}{unit}"
-    width="{width}{unit}"
-    xmlns="http://www.w3.org/2000/svg"
-        version="1.1" baseProfile="full"
-    >
-    """.format(x = -image_width/2, y = -image_height/2, height = image_height, width = image_width, unit = image_unit)
+    # Initialize Cairo surface and context
+    surface = cairo.SVGSurface(output_file, image_width, image_height)
+    ctx = cairo.Context(surface)
 
-    svg_string += """\
-    """
+    # Apply a global transformation to match the original viewBox
+    ctx.translate(image_width / 2, image_height / 2)
+
     # Initialize spiral generation variables
     # prev_outer_x, prev_outer_y: Coordinates of the previous point on the outer edge of the spiral segment
     # prev_inner_x, prev_inner_y: Coordinates of the previous point on the inner edge of the spiral segment
@@ -297,10 +294,9 @@ def create_calendar(parameters):
         fill_color = [(weekday_colors[weekday_index][j] + month_colors[month_index][j]) // 2 for j in range(3)]
         
         # If an input image is provided, blend its color with the calculated fill_color
-        # (Currently commented out)
-        #if input_image_object:
-        #    background_pixel_color = get_image_pixel_color((center_x, center_y))
-        #    fill_color = add_colors(fill_color, background_pixel_color)
+        if input_image_object: # This block will not be entered if PIL is commented out
+            pass # background_pixel_color = get_image_pixel_color((center_x, center_y))
+            # fill_color = add_colors(fill_color, background_pixel_color)
 
         # Add visual markers for specific days
         if current_date.day == 1: # First day of the month
@@ -335,12 +331,22 @@ def create_calendar(parameters):
             # Add a text marker for the anniversary year of the special day
             special_day_markers.append((center_x, center_y, current_date.year - special_day_year, left_to_right_text_rotation_angle, [0,0,0]))
         
-        # Construct the SVG path element for the current day's segment
-        # This is a trapezoid defined by the previous and current inner/outer spiral points
-        svg_string += '<path style="fill:#%s%s%s;stroke:#000000;stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"'%(to_hex_string(fill_color[0]), to_hex_string(fill_color[1]), to_hex_string(fill_color[2]))
-        svg_string += ' d = "M %s,%s L %s,%s %s,%s %s,%s Z '%(current_outer_x,current_outer_y, current_inner_x,current_inner_y, prev_inner_x,prev_inner_y, prev_outer_x,prev_outer_y)
-        svg_string += '"/>'
-        
+        # Draw the current day's segment using Cairo
+        ctx.move_to(current_outer_x, current_outer_y)
+        ctx.line_to(current_inner_x, current_inner_y)
+        ctx.line_to(prev_inner_x, prev_inner_y)
+        ctx.line_to(prev_outer_x, prev_outer_y)
+        ctx.close_path()
+
+        # Set fill color (convert from 0-255 to 0-1 range)
+        ctx.set_source_rgb(fill_color[0] / 255, fill_color[1] / 255, fill_color[2] / 255)
+        ctx.fill_preserve() # Fill the path
+
+        # Set stroke color and width
+        ctx.set_source_rgb(0, 0, 0)  # Black stroke
+        ctx.set_line_width(0.5)
+        ctx.stroke()  # Stroke the path
+
         # Update previous points for the next iteration
         prev_outer_x = current_outer_x
         prev_outer_y = current_outer_y
@@ -354,24 +360,57 @@ def create_calendar(parameters):
         
         current_date += one_day_delta # Move to the next day
         
-    # Add day marker lines to the SVG
-    # These lines are drawn on top of the day segments
+    # Add day marker lines to the SVG using Cairo
     for marker_data in day_marker_lines:
-        svg_string += '''<line style="stroke:#%s;stroke-width:%s;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" x1="%s" y1="%s" x2="%s" y2="%s" />'''%(format_color_string(marker_data[4]), marker_data[5], marker_data[0],marker_data[1],marker_data[2],marker_data[3])
-    
-    # Add text elements (day numbers, month names, years) to the SVG
-    for text_data in text_elements:
-        svg_string += """<text fill="#%s" text-anchor="middle" dominant-baseline="central" font-size="%s" transform=" translate(%s, %s) rotate(%s)">%s</text>"""%(format_color_string(text_data[5]), text_data[4], text_data[0],text_data[1], text_data[3],text_data[2])
-    
-    # Add markers for special days (e.g., birthday year numbers) to the SVG
-    for marker_data in special_day_markers:
-        svg_string += """<text fill="#%s" text-anchor="middle" dominant-baseline="central" font-size="4px" transform=" translate(%s, %s) rotate(%s)">%s</text>"""%(format_color_string(marker_data[4]), marker_data[0],marker_data[1], marker_data[3],marker_data[2])
-    
-    # Close the SVG root element
-    svg_string += """
-    </svg>
-    """
+        ctx.move_to(marker_data[0], marker_data[1])
+        ctx.line_to(marker_data[2], marker_data[3])
+        color = marker_data[4]
+        ctx.set_source_rgb(color[0] / 255, color[1] / 255, color[2] / 255)
+        ctx.set_line_width(marker_data[5])
+        ctx.stroke()
 
-    # Write the complete SVG string to the output file
-    with open(output_file, "w") as f:
-        f.write(svg_string)
+    # Add text elements (day numbers, month names, years) to the SVG using Cairo
+    for text_data in text_elements:
+        ctx.save()  # Save current context state
+        ctx.translate(text_data[0], text_data[1])
+        ctx.rotate(text_data[3] * pi / 180)  # Cairo uses radians for rotation
+
+        color = text_data[5]
+        ctx.set_source_rgb(color[0] / 255, color[1] / 255, color[2] / 255)
+        
+        font_size = text_data[4]
+        ctx.set_font_size(font_size)
+        ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+
+        text = str(text_data[2])
+        extents = ctx.text_extents(text)
+        
+        # Adjust position for text-anchor="middle" and dominant-baseline="central"
+        x_bearing, y_bearing, text_width, text_height, x_advance, y_advance = extents
+        ctx.move_to(-text_width / 2 - x_bearing, -text_height / 2 - y_bearing)
+        ctx.show_text(text)
+        ctx.restore()  # Restore context state
+
+    # Add markers for special days (e.g., birthday year numbers) to the SVG using Cairo
+    for marker_data in special_day_markers:
+        ctx.save()
+        ctx.translate(marker_data[0], marker_data[1])
+        ctx.rotate(marker_data[3] * pi / 180) # Cairo uses radians for rotation
+
+        color = marker_data[4]
+        ctx.set_source_rgb(color[0] / 255, color[1] / 255, color[2] / 255)
+        
+        ctx.set_font_size(4) # Original font size was "4px"
+        ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+
+        text = str(marker_data[2])
+        extents = ctx.text_extents(text)
+
+        # Adjust position for text-anchor="middle" and dominant-baseline="central"
+        x_bearing, y_bearing, text_width, text_height, x_advance, y_advance = extents
+        ctx.move_to(-text_width / 2 - x_bearing, -text_height / 2 - y_bearing)
+        ctx.show_text(text)
+        ctx.restore()
+
+    # Finish drawing and close the surface
+    surface.finish()
