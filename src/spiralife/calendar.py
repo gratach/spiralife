@@ -312,28 +312,29 @@ def create_calendar(parameters):
             day_marker_lines.append((prev_outer_x, prev_outer_y, prev_inner_x, prev_inner_y, (0,200,0), 1.4)) # Green line
         
         # Add text elements for day numbers
-        text_rotation_angle = -(angle / (2*pi))% 1 * 360 + 90 # Calculate text rotation to align with spiral
+        left_to_right_text_rotation_angle = -(angle / (2*pi))% 1 * 360 # Calculate text rotation for continuous text
+        bottom_to_top_text_rotation_angle = left_to_right_text_rotation_angle + 90 # Rotate text to be upright
         if current_date.day % 10 == 0: # Days that are multiples of 10
             if current_date.day > 9: # Avoid marking day 0 if logic changes
-                text_elements.append((center_x, center_y, current_date.day, text_rotation_angle, 4, [0,0,200])) # Blue text
+                text_elements.append((center_x, center_y, current_date.day, bottom_to_top_text_rotation_angle, 4, [0,0,200])) # Blue text
         elif current_date.day % 5 == 0: # Days that are multiples of 5 (but not 10)
             if current_date.day > 9: # Avoid marking day 0 or 5 if logic changes
-                text_elements.append((center_x, center_y, current_date.day, text_rotation_angle, 4, [0,100,0])) # Greenish text
+                text_elements.append((center_x, center_y, current_date.day, bottom_to_top_text_rotation_angle, 4, [0,100,0])) # Greenish text
 
         # Add text elements for the first three letters of the month name on the first three days of the month
         if current_date.day < 4: # 1st, 2nd, 3rd day of the month
-            text_elements.append((center_x, center_y, month_names[current_date.month - 1][current_date.day - 1], text_rotation_angle, 6, [0,0,0])) # Black text
+            text_elements.append((center_x, center_y, month_names[current_date.month - 1][current_date.day - 1], left_to_right_text_rotation_angle, 6, [0,0,0])) # Black text
         
         # Add text elements for year digits on days 5 through 8 of a month
         if current_date.day in range(5, 9): # 5th, 6th, 7th, 8th day of the month
             year_char_index = current_date.day - 5
-            text_elements.append((center_x, center_y, str(current_date.year)[year_char_index], text_rotation_angle, 7, [0,0,0])) # Black text
+            text_elements.append((center_x, center_y, str(current_date.year)[year_char_index], left_to_right_text_rotation_angle, 7, [0,0,0])) # Black text
 
         # Highlight special days (e.g., birthdays)
         if current_date.day == special_day.day and current_date.month == special_day.month:
             fill_color = [255,255,0] # Yellow fill for special day
             # Add a text marker for the anniversary year of the special day
-            special_day_markers.append((center_x, center_y, current_date.year - special_day_year, text_rotation_angle, [0,0,0]))
+            special_day_markers.append((center_x, center_y, current_date.year - special_day_year, left_to_right_text_rotation_angle, [0,0,0]))
         
         # Construct the SVG path element for the current day's segment
         # This is a trapezoid defined by the previous and current inner/outer spiral points
