@@ -6,11 +6,20 @@ This project generates a visually unique spiral calendar as an SVG image. It is 
 
 ## How to Use
 
-1.  **Open the Application:**
-    *   Navigate to the `javascript/src/` directory in your local copy of the repository.
+**Install Dependencies and Build:**
+    *   Open a terminal and navigate to the `javascript` directory.
+    *   Run the following commands:
+         ```bash
+         npm install .
+         npm run build
+         ```
+    *   This will install the necessary dependencies and build the project.
+
+2.  **Open the Application:**
+    *   Navigate to the `javascript/dist/` directory in your local copy of the repository.
     *   Open the `index.html` file in a modern web browser (e.g., Chrome, Firefox, Safari, Edge).
 
-2.  **Configure Your Calendar:**
+3.  **Configure Your Calendar:**
     *   You will see a form with various input fields. Adjust these to customize your calendar:
         *   **Image Width/Height:** Dimensions of the output SVG image (e.g., 2000x1500).
         *   **Image Unit:** The unit for width and height (e.g., `px`).
@@ -21,11 +30,11 @@ This project generates a visually unique spiral calendar as an SVG image. It is 
         *   **Special Day Year/Month/Day:** Define a specific date (e.g., a birthday). The calendar will highlight anniversaries of this date.
         *   **Output File Name:** The name for the SVG file when you download it (e.g., `my_calendar.svg`).
 
-3.  **Generate the Calendar:**
+4.  **Generate the Calendar:**
     *   Click the "Generate Calendar" button.
     *   The generated SVG calendar will appear in the preview area on the page.
 
-4.  **Download the SVG:**
+5.  **Download the SVG:**
     *   Once the calendar is generated, a "Download [filename]" link will appear below the preview.
     *   Click this link to download the generated SVG image to your computer.
 
@@ -37,7 +46,3 @@ This project generates a visually unique spiral calendar as an SVG image. It is 
 *   **Special Day Highlighting:** Anniversaries of a chosen "special day" are highlighted, and the anniversary year is displayed.
 *   **SVG Output:** Generates scalable vector graphics, perfect for high-quality printing or web use.
 *   **Interactive Preview:** View the calendar directly on the webpage before downloading.
-
-## No Build Required
-
-The current version of this JavaScript application does not require any special build steps or compilation. You can run it directly by opening the `javascript/src/index.html` file in your browser. While a `webpack.config.js` file is present in the `javascript` directory (from a previous setup), it is not currently used for this vanilla JavaScript implementation.

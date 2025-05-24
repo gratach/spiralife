@@ -30,6 +30,14 @@ module.exports = {
             chunks: ['main.js']
         })
     ],
+    module: {
+        rules: [
+          {
+            test: /\.css$/i,
+            use: ["style-loader", "css-loader"],
+          },
+        ],
+      },
     // The mode configuration option is used to set the mode for the build process
     mode: 'development',
 };

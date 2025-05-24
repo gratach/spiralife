@@ -1,3 +1,5 @@
+import './style.css'; // Import CSS for styling
+
 let currentObjectUrl = null; // For revoking previous object URLs
 
 const MONTH_NAMES = {
