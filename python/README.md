@@ -23,7 +23,7 @@ To install Spiralife using `pip` from this repository, follow these steps:
 1. Clone the repository:
     ```bash
     git clone https://github.com/gratach/spiralife.git
-    cd spiralife
+    cd spiralife/python
     ```
 
 2. Install the package using `pip`:

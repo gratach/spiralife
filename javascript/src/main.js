@@ -1,0 +1,1 @@
+console.log("TODO: Entry point for the JavaScript application");
