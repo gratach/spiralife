@@ -49,14 +49,14 @@ function project_point_within_circle_to_rectangle(point_x, point_y, rect_width, 
         return { x: 0, y: 0 };
     }
 
-    const scaled_circular_x = (point_x / distance_from_origin) * min_dimension_radius;
-    const scaled_circular_y = (point_y / distance_from_origin) * min_dimension_radius;
+    const scaled_circular_x = point_x * min_dimension_radius; // Changed
+    const scaled_circular_y = point_y * min_dimension_radius; // Changed
     
     return calculate_midpoint(
         scaled_circular_x,
         scaled_circular_y,
-        projected_edge_x,
-        projected_edge_y,
+        projected_edge_x * distance_from_origin, // Changed
+        projected_edge_y * distance_from_origin, // Changed
         distance_from_origin 
     );
 }
@@ -108,7 +108,7 @@ function createCalendar(parameters) {
     const image_height = parameters.image_height;
 
     let svg_elements_parts = [];
-    svg_elements_parts.push(`<svg width="${image_width}${parameters.image_unit}" height="${image_height}${parameters.image_unit}" viewBox="${-image_width/2} ${-image_height/2} ${image_width} ${image_height}" xmlns="http://www.w3.org/2000/svg">`);
+    svg_elements_parts.push(`<svg width="${image_width}${parameters.image_unit}" height="${image_height}${parameters.image_unit}" viewBox="${-image_width/2} ${-image_height/2} ${image_width} ${image_height}" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full">`);
     svg_elements_parts.push(`<rect x="${-image_width/2}" y="${-image_height/2}" width="${image_width}" height="${image_height}" fill="#FFFFFF" />`);
 
 
@@ -175,7 +175,7 @@ function createCalendar(parameters) {
         const fill_color_hex = format_color_string(fill_color_rgb);
 
         if (i > 0) { 
-             svg_elements_parts.push(`<path d="M ${current_outer_x},${current_outer_y} L ${current_inner_x},${current_inner_y} L ${prev_inner_x},${prev_inner_y} L ${prev_outer_x},${prev_outer_y} Z" fill="${fill_color_hex}" stroke="black" stroke-width="0.25" />`);
+             svg_elements_parts.push(`<path style="fill:${fill_color_hex};stroke:#000000;stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M ${current_outer_x},${current_outer_y} L ${current_inner_x},${current_inner_y} L ${prev_inner_x},${prev_inner_y} L ${prev_outer_x},${prev_outer_y} Z" />`);
         
             // Day Marker Lines
             if (date_val === 1) {
@@ -216,25 +216,25 @@ function createCalendar(parameters) {
         prev_inner_y = current_inner_y;
 
         spiral_progress += spiral_progress_increment;
-        radius_factor = spiral_progress * (Math.min(image_width, image_height) / 2);
-        angle += angle_increment;
+        radius_factor = Math.sqrt(spiral_progress);
+        angle = radius_factor * parameters.rotation_constant;
 
         current_date.setDate(current_date.getDate() + 1);
     }
 
     // Process day_marker_lines
     day_marker_lines.forEach(line => {
-        svg_elements_parts.push(`<line x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" stroke="${format_rgb_string(line.color)}" stroke-width="${line.strokeWidth}" />`);
+        svg_elements_parts.push(`<line style="stroke:${format_color_string(line.color)};stroke-width:${line.strokeWidth}px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" />`);
     });
 
     // Process text_elements
     text_elements.forEach(text => {
-        svg_elements_parts.push(`<text x="${text.x}" y="${text.y}" transform="rotate(${text.rotation}, ${text.x}, ${text.y})" font-family="sans-serif" font-size="${text.fontSize}" fill="${format_rgb_string(text.color)}" text-anchor="middle" dominant-baseline="central">${text.text}</text>`);
+        svg_elements_parts.push(`<text transform="translate(${text.x}, ${text.y}) rotate(${text.rotation})" font-family="sans-serif" font-size="${text.fontSize}px" fill="${format_color_string(text.color)}" text-anchor="middle" dominant-baseline="central">${text.text}</text>`);
     });
 
     // Process special_day_markers
     special_day_markers.forEach(marker => {
-        svg_elements_parts.push(`<text x="${marker.x}" y="${marker.y}" transform="rotate(${marker.rotation}, ${marker.x}, ${marker.y})" font-family="sans-serif" font-size="${marker.fontSize}" fill="${format_rgb_string(marker.color)}" text-anchor="middle" dominant-baseline="central">${marker.text}</text>`);
+        svg_elements_parts.push(`<text transform="translate(${marker.x}, ${marker.y}) rotate(${marker.rotation})" font-family="sans-serif" font-size="${marker.fontSize}px" fill="${format_color_string(marker.color)}" text-anchor="middle" dominant-baseline="central">${marker.text}</text>`);
     });
 
     svg_elements_parts.push("</svg>");
