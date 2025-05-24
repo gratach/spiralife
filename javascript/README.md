@@ -1,23 +1,43 @@
-# Project Name
+# Spiralife Calendar Generator - Web Version
 
-## Installation
+## Description
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/gratach/spiralife.git
-    cd spiralife/javascript
-    ```
+This project generates a visually unique spiral calendar as an SVG image. It is a JavaScript port of an original Python project, designed to run directly in a web browser. The generated calendar visualizes a span of days in a continuous spiral, with customizable colors, date ranges, and highlighting for special occasions.
 
-2. Install dependencies:
-    ```bash
-    npm install
-    ```
+## How to Use
 
-3. Build the project:
-    ```bash
-    npm run build
-    ```
+1.  **Open the Application:**
+    *   Navigate to the `javascript/src/` directory in your local copy of the repository.
+    *   Open the `index.html` file in a modern web browser (e.g., Chrome, Firefox, Safari, Edge).
 
-## Usage
+2.  **Configure Your Calendar:**
+    *   You will see a form with various input fields. Adjust these to customize your calendar:
+        *   **Image Width/Height:** Dimensions of the output SVG image (e.g., 2000x1500).
+        *   **Image Unit:** The unit for width and height (e.g., `px`).
+        *   **Start Year/Month/Day:** The starting date for your calendar.
+        *   **Total Days:** The total number of days the calendar should represent.
+        *   **Rotation Constant:** Affects how tightly the spiral winds.
+        *   **Language:** Choose the language for month names (currently supports English, German, French, Spanish).
+        *   **Special Day Year/Month/Day:** Define a specific date (e.g., a birthday). The calendar will highlight anniversaries of this date.
+        *   **Output File Name:** The name for the SVG file when you download it (e.g., `my_calendar.svg`).
 
-The index.html file in the `dist` directory can be opened in a web browser to view the project.
+3.  **Generate the Calendar:**
+    *   Click the "Generate Calendar" button.
+    *   The generated SVG calendar will appear in the preview area on the page.
+
+4.  **Download the SVG:**
+    *   Once the calendar is generated, a "Download [filename]" link will appear below the preview.
+    *   Click this link to download the generated SVG image to your computer.
+
+## Features
+
+*   **Customizable Date Range:** Specify start date and total number of days.
+*   **Adjustable Spiral Parameters:** Control the spiral's appearance with the rotation constant.
+*   **Multilingual Month Names:** Support for English, German, French, and Spanish.
+*   **Special Day Highlighting:** Anniversaries of a chosen "special day" are highlighted, and the anniversary year is displayed.
+*   **SVG Output:** Generates scalable vector graphics, perfect for high-quality printing or web use.
+*   **Interactive Preview:** View the calendar directly on the webpage before downloading.
+
+## No Build Required
+
+The current version of this JavaScript application does not require any special build steps or compilation. You can run it directly by opening the `javascript/src/index.html` file in your browser. While a `webpack.config.js` file is present in the `javascript` directory (from a previous setup), it is not currently used for this vanilla JavaScript implementation.

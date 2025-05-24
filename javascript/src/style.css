@@ -1,0 +1,73 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+
+#calendarForm div {
+    margin-bottom: 10px;
+    display: flex; /* Align label and input on the same line */
+    align-items: center; /* Vertically align items in the flex container */
+}
+
+#calendarForm label {
+    margin-right: 10px;
+    min-width: 150px; /* Give labels a minimum width for alignment */
+    text-align: right; /* Align text to the right for labels */
+}
+
+#calendarForm input[type="number"],
+#calendarForm input[type="text"],
+#calendarForm select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-grow: 1; /* Allow inputs to take available space */
+    max-width: 300px; /* But not too wide */
+}
+
+#generateButton, #downloadLink {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none; /* For the <a> tag */
+    font-size: 16px;
+}
+
+#generateButton:hover, #downloadLink:hover {
+    background-color: #2980b9;
+}
+
+#svgContainer {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    background-color: white; /* To see the SVG clearly if it's transparent */
+    min-height: 100px; /* So it's visible before SVG is large */
+    display: flex; /* To center the SVG if it's smaller than the container */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    overflow: auto; /* Add scrollbars if SVG is too large */
+}
+
+/* Ensure download link is block for margin auto to work if not already set by JS */
+/* JS already sets display: block when it's ready, but this is a good default if needed */
+/* It's initially set to display: none in the HTML. */
+/* No override needed here as JS handles its display state. */
+/* However, we can ensure it looks like a button when displayed. */
+
+#downloadLink {
+    /* Styles for button appearance are already defined above */
+    /* JS will change display from 'none' to 'block' */
+}
