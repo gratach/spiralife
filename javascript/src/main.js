@@ -106,42 +106,23 @@ function add_colors(color1_rgb, color2_rgb) {
 
 
 function createCalendar(parameters) {
-    /*
-    The spiral starts in the middle and spirals outwards.
-    For once we ignore the square transformation and just look at the spiral within the circle of radius 1.
-    The spiral line between the boxes is defined by the following parameters:
-        The parameter current_line_turns defines the number of turns of the line inbetween the day boxes from the origin to the current position.
-        The parameter total_line_turns defines the number of turns when the line intersects the circle of radius 1.
-        The parameter current_line_radius defines the distance from the origin to the current position of the line.
-            current_line_radius = current_line_turns / total_line_turns
-        The parameter current_line_distance defines the distance from the origin to the current position of the line.
-            current_line_distance = integral_{0}^{current_line_turns}{(2 * pi * current_line_radius') d(current_line_turns')}
-                                = current_line_turns^2 / total_line_turns * pi
-    The spiral of boxes is bounded by the spiral line at the inner and outer side.
-    The spiral of boxes is defined by the following parameters:
-        The parameter total_box_count defines the number of boxes in the spiral.
-        The parameter outer_box_start_turns is the number of turns on the line where the outer side of the first box starts.
-            It has to be at least 1 because the inner side of the first box is one turn before the outer side.
-        The parameter outer_box_end_turns is the number of turns on the line where the outer side of the last box ends.
-            This can be larger than total_line_turns. In this case the outer spial boxes fade out the image.
-        The parameter total_box_turns is the number of turns from the beginning of the first box to the end of the last box.
-            total_box_turns = outer_box_end_turns - outer_box_start_turns
-        The parameter additional_turns is the difference between the outer_box_end_turns and the total_line_turns.
-            additional_turns = outer_box_end_turns - total_line_turns
-        The parameter total_box_distance is the distance on the outer line from the beginning of the first box to the end of the last box.
-            total_box_distance = integral_{outer_box_start_turns}^{outer_box_end_turns}{(2 * pi * current_line_radius') d(current_line_turns')}
-                               = (outer_box_end_turns^2 - outer_box_start_turns^2) / total_line_turns * pi
-        The parameter box_width is the width of the boxes in the spiral measured at the outer side.
-            box_width = total_box_distance / total_box_count
-
-    The input parameters are:
-        total_box_turns (this parameter is actually called "total turns" in the input)
-        total_box_count (this parameter is actually called "total days" in the input)
-        additional_turns (this parameter is actually called "turns beyond the image border")
-        empty_turns_in_the_middle (this parameter is actually called "empty turns in the middle" in the input)
-            This is defined as outer_box_start_turns - 1.
-    */
     const current_month_names = MONTH_NAMES[parameters.language] || MONTH_NAMES["en"];
+
+    // Retrieve Parameters (Subtask Item 1)
+    const ui_total_box_count = parameters.total_days;
+    const ui_total_turns = parameters.ui_total_turns;
+    const ui_empty_turns = parameters.ui_empty_turns;
+    const ui_additional_turns = parameters.ui_additional_turns;
+
+    // Calculate Core Spiral Definition Parameters (Subtask Item 2)
+    const outer_box_start_turns = ui_empty_turns + 1;
+    const total_box_turns_val = ui_total_turns;
+    const outer_box_end_turns = total_box_turns_val + outer_box_start_turns;
+    let total_line_turns = outer_box_end_turns - ui_additional_turns;
+    if (total_line_turns <= 0) { 
+        console.warn('total_line_turns is not positive, defaulting. Original value:', total_line_turns, 'Using Math.max(1, total_box_turns_val):', Math.max(1, total_box_turns_val)); 
+        total_line_turns = Math.max(1, total_box_turns_val); 
+    }
 
     const image_width = parameters.image_width;
     const image_height = parameters.image_height;
@@ -150,16 +131,48 @@ function createCalendar(parameters) {
     svg_elements_parts.push(`<svg width="${image_width}${parameters.image_unit}" height="${image_height}${parameters.image_unit}" viewBox="${-image_width/2} ${-image_height/2} ${image_width} ${image_height}" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full">`);
     svg_elements_parts.push(`<rect x="${-image_width/2}" y="${-image_height/2}" width="${image_width}" height="${image_height}" fill="${parameters.background_color}" />`);
 
+    // Helper functions for arc length calculations (Subtask Item 2)
+    function turns_to_distance(turns, total_line_turns_val) {
+        if (total_line_turns_val <= 0) return 0;
+        const effective_turns = Math.max(0, turns);
+        return (effective_turns * effective_turns) / total_line_turns_val * Math.PI;
+    }
 
-    let prev_outer_x = 0;
-    let prev_outer_y = 0;
-    let prev_inner_x = 0;
-    let prev_inner_y = 0;
-    let angle = 0;
-    let spiral_progress = 0;
-    let radius_factor = 0;
-    const spiral_progress_increment = 1 / parameters.total_days;
-    const angle_increment = (2 * Math.PI) / parameters.rotation_constant * 0.85; 
+    function distance_to_turns(distance, total_line_turns_val) {
+        if (distance < 0 || total_line_turns_val <= 0 || Math.PI === 0) return 0;
+        return Math.sqrt(distance * total_line_turns_val / Math.PI);
+    }
+
+    // Calculate Arc Distances and Width (Subtask Item 3)
+    const initial_outer_edge_start_distance = turns_to_distance(outer_box_start_turns, total_line_turns);
+    const final_outer_edge_end_distance = turns_to_distance(outer_box_end_turns, total_line_turns);
+    const total_scroll_distance_on_outer_line = final_outer_edge_end_distance - initial_outer_edge_start_distance;
+    const box_arc_width_on_outer_line = (ui_total_box_count > 0) ? total_scroll_distance_on_outer_line / ui_total_box_count : 0;
+
+    // Helper function for coordinate calculation (Subtask Item 4 - Verified)
+    function get_coords_for_turn(turn_value, total_line_turns_val) {
+        if (total_line_turns_val <= 0) return { x: 0, y: 0 };
+        let radius = turn_value / total_line_turns_val;
+        radius = Math.max(0, radius); // Ensure radius is not negative
+        const theta = turn_value * 2 * Math.PI;
+        return { x: Math.sin(theta) * radius, y: Math.cos(theta) * radius };
+    }
+
+    // Initialize prev_... coordinates for the start of the first day segment (Subtask Item 4 - Revised)
+    const initial_turn_outer = outer_box_start_turns;
+    // Initialize prev_... Coordinates (Subtask Item 5)
+    let turn_outer_prev = outer_box_start_turns;
+    let turn_inner_prev = Math.max(0, turn_outer_prev - 1);
+    let { x: raw_prev_outer_x, y: raw_prev_outer_y } = get_coords_for_turn(turn_outer_prev, total_line_turns);
+    let { x: raw_prev_inner_x, y: raw_prev_inner_y } = get_coords_for_turn(turn_inner_prev, total_line_turns);
+    
+    let proj_prev_outer = project_point_within_circle_to_rectangle(raw_prev_outer_x, raw_prev_outer_y, image_width, image_height);
+    let proj_prev_inner = project_point_within_circle_to_rectangle(raw_prev_inner_x, raw_prev_inner_y, image_width, image_height);
+    
+    let prev_outer_x = proj_prev_outer.x;
+    let prev_outer_y = proj_prev_outer.y;
+    let prev_inner_x = proj_prev_inner.x;
+    let prev_inner_y = proj_prev_inner.y;
 
     let current_date = new Date(parameters.start_year, parameters.start_month - 1, parameters.start_day);
     const special_day = new Date(parameters.special_day_year, parameters.special_day_month - 1, parameters.special_day_day);
@@ -168,26 +181,35 @@ function createCalendar(parameters) {
     let text_elements = []; 
     let day_marker_lines = []; 
 
-    for (let i = 0; i < parameters.total_days + 800; i++) {
-        let current_outer_x_raw = Math.sin(angle) * radius_factor;
-        let current_outer_y_raw = Math.cos(angle) * radius_factor;
-        let current_inner_x_raw = Math.sin(angle) * (radius_factor + angle_increment); 
-        let current_inner_y_raw = Math.cos(angle) * (radius_factor + angle_increment);
+    // Main loop (Subtask Item 6)
+    for (let i = 0; i < ui_total_box_count; i++) {
+        // Calculate current day's outer edge position based on arc distance
+        const current_day_outer_edge_end_scroll_distance = initial_outer_edge_start_distance + (i + 1) * box_arc_width_on_outer_line;
+        let turn_outer_curr = distance_to_turns(current_day_outer_edge_end_scroll_distance, total_line_turns);
+        let turn_inner_curr = Math.max(0, turn_outer_curr - 1);
 
-        let proj_outer = project_point_within_circle_to_rectangle(current_outer_x_raw, current_outer_y_raw, image_width * 0.99, image_height * 0.99);
-        let proj_inner = project_point_within_circle_to_rectangle(current_inner_x_raw, current_inner_y_raw, image_width * 0.99, image_height * 0.99);
+        // Get raw coordinates for current points
+        let { x: raw_curr_outer_x, y: raw_curr_outer_y } = get_coords_for_turn(turn_outer_curr, total_line_turns);
+        let { x: raw_curr_inner_x, y: raw_curr_inner_y } = get_coords_for_turn(turn_inner_curr, total_line_turns);
+
+        // Project current raw coordinates
+        let proj_curr_outer = project_point_within_circle_to_rectangle(raw_curr_outer_x, raw_curr_outer_y, image_width, image_height);
+        let proj_curr_inner = project_point_within_circle_to_rectangle(raw_curr_inner_x, raw_curr_inner_y, image_width, image_height);
         
-        let current_outer_x = proj_outer.x;
-        let current_outer_y = proj_outer.y;
-        let current_inner_x = proj_inner.x;
-        let current_inner_y = proj_inner.y;
-
+        let current_outer_x = proj_curr_outer.x;
+        let current_outer_y = proj_curr_outer.y;
+        let current_inner_x = proj_curr_inner.x;
+        let current_inner_y = proj_curr_inner.y;
+        
+        // Calculate center point of the current day's trapezoidal segment
         let center_x = (current_outer_x + current_inner_x + prev_inner_x + prev_outer_x) / 4;
         let center_y = (current_outer_y + current_inner_y + prev_inner_y + prev_outer_y) / 4;
 
-        let left_to_right_text_rotation_angle = -((angle / (2 * Math.PI)) % 1) * 360;
+        // Text Rotation Angle (using turn_outer_prev and turn_outer_curr)
+        const avg_outer_turn = (turn_outer_prev + turn_outer_curr) / 2;
+        const theta_for_text = avg_outer_turn * 2 * Math.PI;
+        let left_to_right_text_rotation_angle = -((theta_for_text / (2 * Math.PI)) % 1) * 360;
         let bottom_to_top_text_rotation_angle = left_to_right_text_rotation_angle + 90;
-
 
         let adjusted_weekday_index = (current_date.getDay() + 6) % 7; 
         let month_index = current_date.getMonth(); 
@@ -213,11 +235,11 @@ function createCalendar(parameters) {
         
         const fill_color_hex = format_color_string(fill_color_rgb);
 
-        if (i > 0) { 
-             svg_elements_parts.push(`<path style="fill:${fill_color_hex};stroke:#000000;stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M ${current_outer_x},${current_outer_y} L ${current_inner_x},${current_inner_y} L ${prev_inner_x},${prev_inner_y} L ${prev_outer_x},${prev_outer_y} Z" />`);
-        
-            // Day Marker Lines
-            if (date_val === 1) {
+        // Draw path and markers for every day segment (Removed "if (i > 0)" condition - Subtask Item 6)
+        svg_elements_parts.push(`<path style="fill:${fill_color_hex};stroke:#000000;stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M ${current_outer_x},${current_outer_y} L ${current_inner_x},${current_inner_y} L ${prev_inner_x},${prev_inner_y} L ${prev_outer_x},${prev_outer_y} Z" />`);
+    
+        // Day Marker Lines
+        if (date_val === 1) {
                 day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: [200,0,0], strokeWidth: 2 });
             } else if (date_val % 10 === 1) {
                 day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: [0,0,200], strokeWidth: 1.5 });
@@ -246,18 +268,16 @@ function createCalendar(parameters) {
                     text_elements.push({ x: center_x, y: center_y, text: year_str[year_char_index], rotation: left_to_right_text_rotation_angle, fontSize: 7, color: [0,0,0] });
                 }
             }
-        }
+        // The closing brace for the removed "if (i > 0)" is now correctly removed by not including it here.
 
-
+        // Update prev_... coordinates for the next iteration (Subtask Item 6)
         prev_outer_x = current_outer_x;
         prev_outer_y = current_outer_y;
         prev_inner_x = current_inner_x;
         prev_inner_y = current_inner_y;
+        turn_outer_prev = turn_outer_curr; // Update for the next iteration's text angle
 
-        spiral_progress += spiral_progress_increment;
-        radius_factor = Math.sqrt(spiral_progress);
-        angle = radius_factor * parameters.rotation_constant;
-
+        // Increment current_date for the next day
         current_date.setDate(current_date.getDate() + 1);
     }
 
@@ -295,6 +315,8 @@ const specialDayMonthInput = document.getElementById('specialDayMonth');
 const specialDayDayInput = document.getElementById('specialDayDay');
 const backgroundColorInput = document.getElementById('backgroundColor');
 const outputFileNameInput = document.getElementById('outputFileName'); 
+const emptyTurnsInMiddleInput = document.getElementById('emptyTurnsInMiddle');
+const additionalTurnsBeyondBorderInput = document.getElementById('additionalTurnsBeyondBorder');
 const svgContainer = document.getElementById('svgContainer');
 const downloadLink = document.getElementById('downloadLink');
 const calendarForm = document.getElementById('calendarForm'); // Added for easy access to form inputs
@@ -347,12 +369,14 @@ function generateAndDisplayCalendar() {
         const startMonth = parseInt(startMonthInput.value, 10);
         const startDay = parseInt(startDayInput.value, 10);
         const totalDays = parseInt(totalDaysInput.value, 10);
-        const rotationConstant = parseFloat(rotationConstantInput.value);
+        const rotationConstant = parseFloat(rotationConstantInput.value); // Verified: Already parseFloat
         const language = languageInput.value;
         const specialDayYear = parseInt(specialDayYearInput.value, 10);
         const specialDayMonth = parseInt(specialDayMonthInput.value, 10);
         const specialDayDay = parseInt(specialDayDayInput.value, 10);
         const backgroundColor = backgroundColorInput.value || '#000000'; // Default to black if empty
+        const emptyTurnsInMiddle = parseFloat(emptyTurnsInMiddleInput.value); // Changed to parseFloat
+        const additionalTurnsBeyondBorder = parseFloat(additionalTurnsBeyondBorderInput.value); // Changed to parseFloat
         
         let filename = outputFileNameInput.value;
         if (!filename || filename.trim() === "") {
@@ -365,7 +389,7 @@ function generateAndDisplayCalendar() {
         // Validate inputs (basic example, can be expanded)
         if (isNaN(imageWidth) || isNaN(imageHeight) || isNaN(startYear) || isNaN(startMonth) ||
             isNaN(startDay) || isNaN(totalDays) || isNaN(rotationConstant) || isNaN(specialDayYear) ||
-            isNaN(specialDayMonth) || isNaN(specialDayDay)) {
+            isNaN(specialDayMonth) || isNaN(specialDayDay) || isNaN(emptyTurnsInMiddle) || isNaN(additionalTurnsBeyondBorder)) {
             throw new Error("Invalid input: Ensure all numeric fields are correctly filled.");
         }
         if (startMonth < 1 || startMonth > 12 || specialDayMonth < 1 || specialDayMonth > 12) {
@@ -381,8 +405,10 @@ function generateAndDisplayCalendar() {
             start_month: startMonth,
             start_day: startDay,
             total_days: totalDays,
-            rotation_constant: rotationConstant,
+            ui_total_turns: rotationConstant,
             language: language,
+            ui_empty_turns: emptyTurnsInMiddle,
+            ui_additional_turns: additionalTurnsBeyondBorder,
             special_day_year: specialDayYear,
             special_day_month: specialDayMonth,
             special_day_day: specialDayDay,
