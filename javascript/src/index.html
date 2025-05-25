@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Calendar Generator</h1>
+    <h1>Spiralife Calendar Generator</h1>
 
     <form id="calendarForm">
         <div>
@@ -64,6 +64,10 @@
             <input type="number" id="specialDayDay" name="specialDayDay" value="1" min="1" max="31">
         </div>
         <div>
+            <label for="backgroundColor">Background Color:</label>
+            <input type="text" id="backgroundColor" name="outputFileName" value="#000000">
+        </div>
+        <div>
             <label for="outputFileName">Output File Name:</label>
             <input type="text" id="outputFileName" name="outputFileName" value="calendar.svg">
         </div>
@@ -73,7 +77,5 @@
 
     <div id="svgContainer"></div>
     <a id="downloadLink" style="display: none;">Download SVG</a>
-
-    <script src="../main.js" type="module"></script>
 </body>
 </html>

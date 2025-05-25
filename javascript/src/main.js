@@ -109,7 +109,7 @@ function createCalendar(parameters) {
 
     let svg_elements_parts = [];
     svg_elements_parts.push(`<svg width="${image_width}${parameters.image_unit}" height="${image_height}${parameters.image_unit}" viewBox="${-image_width/2} ${-image_height/2} ${image_width} ${image_height}" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full">`);
-    svg_elements_parts.push(`<rect x="${-image_width/2}" y="${-image_height/2}" width="${image_width}" height="${image_height}" fill="#FFFFFF" />`);
+    svg_elements_parts.push(`<rect x="${-image_width/2}" y="${-image_height/2}" width="${image_width}" height="${image_height}" fill="${parameters.background_color}" />`);
 
 
     let prev_outer_x = 0;
@@ -254,6 +254,7 @@ const languageInput = document.getElementById('language');
 const specialDayYearInput = document.getElementById('specialDayYear');
 const specialDayMonthInput = document.getElementById('specialDayMonth');
 const specialDayDayInput = document.getElementById('specialDayDay');
+const backgroundColorInput = document.getElementById('backgroundColor');
 const outputFileNameInput = document.getElementById('outputFileName'); 
 const generateButton = document.getElementById('generateButton');
 const svgContainer = document.getElementById('svgContainer');
@@ -272,6 +273,7 @@ generateButton.addEventListener('click', () => {
     const language = languageInput.value;
     const specialDayYear = parseInt(specialDayYearInput.value, 10);
     const specialDayMonth = parseInt(specialDayMonthInput.value, 10);
+    const background_color = backgroundColorInput.value || '#FFFFFF';
     const specialDayDay = parseInt(specialDayDayInput.value, 10);
     
     let filename = outputFileNameInput.value;
@@ -295,6 +297,7 @@ generateButton.addEventListener('click', () => {
         special_day_year: specialDayYear,
         special_day_month: specialDayMonth,
         special_day_day: specialDayDay,
+        background_color: background_color,
         output_file: filename, 
     };
 
