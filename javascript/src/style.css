@@ -1,73 +1,240 @@
-body {
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrollbars on the body itself */
     font-family: sans-serif;
-    margin: 20px;
-    background-color: #f4f4f4;
     color: #333;
 }
 
-h1 {
+body {
+    display: flex; /* Helps manage main layout areas if needed, though many elements are fixed */
+    background-color: #f4f4f4; /* Default background, though calendarBackground will cover it */
+}
+
+/* Utility class to prevent text selection */
+.no-select {
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* Internet Explorer/Edge */
+}
+
+#calendarBackground {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* This is key for showing scrollbars */
+    /* background-color: #eee; */ /* Optional: for debugging viewport */
+    z-index: 0; /* Or an appropriate value if other elements are layered */
+}
+
+#zoomableScrollableContainer {
+    position: relative; /* Important for child positioning if needed, and for transform-origin */
+    /* width and height are set by JS */
+    /* border: 1px solid red; */ /* Optional: for debugging */
+}
+
+#svgContainer {
+    width: 100%;
+    height: 100%;
+    /* display: flex; justify-content: center; align-items: center; */ /* Flex centering removed */
+    /* border: 1px solid blue; */ /* Optional: for debugging */
+    /* overflow: auto; Removed, handled by #calendarBackground */
+}
+
+#svgContainer svg {
+    display: block; /* Good practice for elements being transformed/sized */
+    transform-origin: top left;
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* Internet Explorer/Edge */
+}
+
+#parametersFlap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 350px; /* Adjusted width */
+    background-color: #f0f0f0;
+    overflow-y: auto; /* Scrollbar for flap content */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 50; /* Above calendarBackground but below other controls */
+    transition: left 0.3s ease-in-out; /* Smooth transition for hiding/showing */
+}
+
+#parametersFlap.hidden {
+    left: -350px; /* Slide out of view */
+}
+
+#parametersFlap h1 {
     text-align: center;
     color: #2c3e50;
+    font-size: 1.5em; /* Adjusted for flap */
+    margin-top: 0; /* Remove default H1 margin if it's too much */
 }
 
 #calendarForm div {
-    margin-bottom: 10px;
-    display: flex; /* Align label and input on the same line */
-    align-items: center; /* Vertically align items in the flex container */
+    margin-bottom: 12px; /* Spacing between form fields */
+    display: flex;
+    flex-direction: column; /* Stack label and input vertically */
 }
 
 #calendarForm label {
-    margin-right: 10px;
-    min-width: 150px; /* Give labels a minimum width for alignment */
-    text-align: right; /* Align text to the right for labels */
+    margin-bottom: 5px; /* Space between label and input */
+    font-weight: bold;
+    text-align: left; /* Align labels to the left in vertical layout */
 }
 
 #calendarForm input[type="number"],
 #calendarForm input[type="text"],
 #calendarForm select {
-    padding: 8px;
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    flex-grow: 1; /* Allow inputs to take available space */
-    max-width: 300px; /* But not too wide */
+    width: 100%; /* Make inputs take full width of their container */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
-#generateButton, #downloadLink {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
+#toggleParametersButton {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 100; /* Above parametersFlap */
+    padding: 10px 15px;
     background-color: #3498db;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    text-align: center;
-    text-decoration: none; /* For the <a> tag */
-    font-size: 16px;
+    font-size: 14px;
 }
 
-#generateButton:hover, #downloadLink:hover {
+#toggleParametersButton:hover {
     background-color: #2980b9;
 }
 
-#svgContainer {
-    margin-top: 20px;
-    border: 1px solid #ddd;
-    background-color: white; /* To see the SVG clearly if it's transparent */
-    min-height: 100px; /* So it's visible before SVG is large */
-    display: flex; /* To center the SVG if it's smaller than the container */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-    overflow: auto; /* Add scrollbars if SVG is too large */
+#downloadLink {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 12px 25px;
+    background-color: #2ecc71; /* Green for download */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    /* display: none; is set inline in HTML, JS will manage visibility */
 }
 
-/* Ensure download link is block for margin auto to work if not already set by JS */
-/* JS already sets display: block when it's ready, but this is a good default if needed */
-/* It's initially set to display: none in the HTML. */
-/* No override needed here as JS handles its display state. */
-/* However, we can ensure it looks like a button when displayed. */
+#downloadLink:hover {
+    background-color: #27ae60;
+}
 
-#downloadLink {
-    /* Styles for button appearance are already defined above */
-    /* JS will change display from 'none' to 'block' */
+#zoomControls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100; /* Above calendar background */
+    display: flex; /* Use flex for layout if needed, or just position buttons */
+    flex-direction: column; /* Stack zoom buttons vertically */
+}
+
+#zoomControls button {
+    padding: 10px; /* Adjusted padding */
+    margin-bottom: 8px; /* Space between zoom buttons */
+    background-color: #7f8c8d; /* Using original theme color */
+    color: white;
+    border: none;
+    border-radius: 5px; /* Original border-radius */
+    cursor: pointer;
+    font-size: 18px; /* Original font size */
+    width: 40px; /* Original width */
+    height: 40px; /* Original height */
+    text-align: center;
+    display: block; /* Ensure buttons are block for margin to work as expected */
+}
+
+#zoomControls button:last-child {
+    margin-bottom: 0;
+}
+
+#zoomControls button:hover {
+    background-color: #6c7a7d; /* Original hover color */
+}
+
+#errorMessageContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200; /* Highest z-index */
+    background-color: rgba(231, 76, 60, 0.9); /* Reddish, slightly transparent */
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    display: none; /* Initially hidden */
+    min-width: 250px; /* Minimum width */
+    text-align: center;
+}
+
+/* Styles for any content within the error message container, if needed */
+#errorMessageContainer p {
+    margin: 0;
+}
+
+/* Clean up old styles that are no longer needed or conflict */
+/* #generateButton is removed from HTML, so its style is implicitly removed */
+/* Old body margin, #calendarForm div flex alignment, etc., are overridden */
+/* Old #svgContainer styles are largely overridden or adapted */
+
+/* Ensure that the flap, when visible, doesn't cause horizontal scroll on body */
+/* This is generally handled by `overflow: hidden` on html/body and correct fixed positioning. */
+/* The `left: -350px` for `.hidden` on `#parametersFlap` ensures it's off-screen. */
+
+/* Responsive considerations (optional for now, but good to keep in mind) */
+@media (max-width: 768px) {
+    #parametersFlap {
+        width: 100%; /* Full width on smaller screens */
+        height: 50%; /* Or a portion of the height */
+        bottom: 0;
+        top: auto; /* Override top:0 */
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* Shadow on top */
+    }
+
+    #parametersFlap.hidden {
+        left: 0; /* Keep at left */
+        bottom: -100%; /* Slide down out of view */
+    }
+
+    #toggleParametersButton {
+        /* Adjust if needed for new flap position on mobile */
+    }
+
+    #downloadLink {
+        /* Might need adjustment if flap is at bottom */
+        bottom: calc(50% + 20px); /* Example: if flap is 50% height */
+    }
+    
+    #zoomControls { /* Responsive styles for zoom controls */
+         /* Might need adjustment if flap is at bottom and parametersFlap is visible */
+        bottom: calc(50% + 20px); 
+    }
+
+    #calendarForm input[type="number"],
+    #calendarForm input[type="text"],
+    #calendarForm select {
+        max-width: none; /* Allow full width within the flap */
+    }
 }

@@ -2,6 +2,10 @@ import './style.css'; // Import CSS for styling
 
 let currentObjectUrl = null; // For revoking previous object URLs
 
+// Zoom State Variables
+let currentZoom = 1;
+const zoomStep = 0.1; // Or your preferred step
+
 const MONTH_NAMES = {
     en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     de: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
@@ -291,68 +295,193 @@ const specialDayMonthInput = document.getElementById('specialDayMonth');
 const specialDayDayInput = document.getElementById('specialDayDay');
 const backgroundColorInput = document.getElementById('backgroundColor');
 const outputFileNameInput = document.getElementById('outputFileName'); 
-const generateButton = document.getElementById('generateButton');
 const svgContainer = document.getElementById('svgContainer');
 const downloadLink = document.getElementById('downloadLink');
+const calendarForm = document.getElementById('calendarForm'); // Added for easy access to form inputs
 
-// Add event listener to the generate button
-generateButton.addEventListener('click', () => {
-    const imageWidth = parseInt(imageWidthInput.value, 10);
-    const imageHeight = parseInt(imageHeightInput.value, 10);
-    const imageUnit = imageUnitInput.value;
-    const startYear = parseInt(startYearInput.value, 10);
-    const startMonth = parseInt(startMonthInput.value, 10);
-    const startDay = parseInt(startDayInput.value, 10);
-    const totalDays = parseInt(totalDaysInput.value, 10);
-    const rotationConstant = parseFloat(rotationConstantInput.value);
-    const language = languageInput.value;
-    const specialDayYear = parseInt(specialDayYearInput.value, 10);
-    const specialDayMonth = parseInt(specialDayMonthInput.value, 10);
-    const background_color = backgroundColorInput.value || '#FFFFFF';
-    const specialDayDay = parseInt(specialDayDayInput.value, 10);
-    
-    let filename = outputFileNameInput.value;
-    if (!filename || filename.trim() === "") {
-        filename = "calendar.svg";
-    }
-    if (!filename.toLowerCase().endsWith('.svg')) {
-        filename += '.svg';
+// New UI elements
+const parametersFlap = document.getElementById('parametersFlap');
+const toggleParametersButton = document.getElementById('toggleParametersButton');
+const zoomInButton = document.getElementById('zoomInButton');
+const zoomOutButton = document.getElementById('zoomOutButton');
+const zoomableScrollableContainer = document.getElementById('zoomableScrollableContainer');
+const errorMessageContainer = document.getElementById('errorMessageContainer');
+const calendarBackground = document.getElementById('calendarBackground');
+
+// Function to apply zoom
+function applyZoom() {
+    const baseSvgWidth = parseInt(imageWidthInput.value, 10);
+    const baseSvgHeight = parseInt(imageHeightInput.value, 10);
+
+    if (isNaN(baseSvgWidth) || isNaN(baseSvgHeight) || baseSvgWidth <= 0 || baseSvgHeight <= 0) {
+        console.error("Invalid base SVG dimensions for zoom.");
+        return;
     }
 
-    const calendarParameters = {
-        image_width: imageWidth,
-        image_height: imageHeight,
-        image_unit: imageUnit,
-        start_year: startYear,
-        start_month: startMonth,
-        start_day: startDay,
-        total_days: totalDays,
-        rotation_constant: rotationConstant,
-        language: language,
-        special_day_year: specialDayYear,
-        special_day_month: specialDayMonth,
-        special_day_day: specialDayDay,
-        background_color: background_color,
-        output_file: filename, 
-    };
+    const newWidth = baseSvgWidth * currentZoom;
+    const newHeight = baseSvgHeight * currentZoom;
 
-    console.log("Calendar Parameters:", calendarParameters);
+    zoomableScrollableContainer.style.width = newWidth + 'px';
+    zoomableScrollableContainer.style.height = newHeight + 'px';
 
-    const svgString = createCalendar(calendarParameters);
-    
-    svgContainer.innerHTML = svgString;
-    console.log("Generated SVG String length:", svgString.length);
-
-    if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl);
+    const svgElement = svgContainer.querySelector('svg');
+    if (svgElement) {
+        // svgElement.style.transformOrigin = 'top left'; // Already set in CSS
+        svgElement.style.transform = `scale(${currentZoom})`;
+        // The SVG element's width/height attributes are set by createCalendar to base dimensions
     }
+}
 
-    const blob = new Blob([svgString], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    currentObjectUrl = url; 
+// Function to generate and display the calendar
+function generateAndDisplayCalendar() {
+    try {
+        // Clear previous errors
+        errorMessageContainer.innerHTML = '';
+        errorMessageContainer.style.display = 'none';
 
-    downloadLink.href = url;
-    downloadLink.download = filename; 
-    downloadLink.style.display = 'block';
-    downloadLink.textContent = `Download ${filename}`;
+        // Read parameter values
+        const imageWidth = parseInt(imageWidthInput.value, 10);
+        const imageHeight = parseInt(imageHeightInput.value, 10);
+        const imageUnit = imageUnitInput.value;
+        const startYear = parseInt(startYearInput.value, 10);
+        const startMonth = parseInt(startMonthInput.value, 10);
+        const startDay = parseInt(startDayInput.value, 10);
+        const totalDays = parseInt(totalDaysInput.value, 10);
+        const rotationConstant = parseFloat(rotationConstantInput.value);
+        const language = languageInput.value;
+        const specialDayYear = parseInt(specialDayYearInput.value, 10);
+        const specialDayMonth = parseInt(specialDayMonthInput.value, 10);
+        const specialDayDay = parseInt(specialDayDayInput.value, 10);
+        const backgroundColor = backgroundColorInput.value || '#000000'; // Default to black if empty
+        
+        let filename = outputFileNameInput.value;
+        if (!filename || filename.trim() === "") {
+            filename = "calendar.svg";
+        }
+        if (!filename.toLowerCase().endsWith('.svg')) {
+            filename += '.svg';
+        }
+
+        // Validate inputs (basic example, can be expanded)
+        if (isNaN(imageWidth) || isNaN(imageHeight) || isNaN(startYear) || isNaN(startMonth) ||
+            isNaN(startDay) || isNaN(totalDays) || isNaN(rotationConstant) || isNaN(specialDayYear) ||
+            isNaN(specialDayMonth) || isNaN(specialDayDay)) {
+            throw new Error("Invalid input: Ensure all numeric fields are correctly filled.");
+        }
+        if (startMonth < 1 || startMonth > 12 || specialDayMonth < 1 || specialDayMonth > 12) {
+            throw new Error("Invalid month: Month must be between 1 and 12.");
+        }
+        // Add more specific day validation based on month/year if needed
+
+        const calendarParameters = {
+            image_width: imageWidth,
+            image_height: imageHeight,
+            image_unit: imageUnit,
+            start_year: startYear,
+            start_month: startMonth,
+            start_day: startDay,
+            total_days: totalDays,
+            rotation_constant: rotationConstant,
+            language: language,
+            special_day_year: specialDayYear,
+            special_day_month: specialDayMonth,
+            special_day_day: specialDayDay,
+            background_color: backgroundColor, // Corrected parameter name
+            output_file: filename,
+        };
+
+        // console.log("Calendar Parameters:", calendarParameters); // Keep for debugging if needed
+
+        const svgString = createCalendar(calendarParameters);
+        
+        svgContainer.innerHTML = svgString;
+        const svgElement = svgContainer.querySelector('svg');
+        if (svgElement) {
+            svgElement.style.userSelect = 'none';
+            svgElement.style.webkitUserSelect = 'none'; // Safari
+            svgElement.style.mozUserSelect = 'none';    // Firefox
+            svgElement.style.msUserSelect = 'none';     // IE/Edge
+        }
+
+        // Reset pan on new calendar generation (REMOVED)
+        // Apply current zoom and reset pan (REMOVED)
+        applyZoom(); // Apply zoom after new SVG is rendered and sized
+
+        // console.log("Generated SVG String length:", svgString.length); // Keep for debugging
+
+        if (currentObjectUrl) {
+            URL.revokeObjectURL(currentObjectUrl);
+        }
+
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        currentObjectUrl = url; 
+
+        downloadLink.href = url;
+        downloadLink.download = filename; 
+        downloadLink.style.display = 'block';
+        downloadLink.textContent = `Download ${filename}`;
+
+        // Update calendar background color if #calendarBackground is used for it
+        if (calendarBackground) {
+            // This assumes the SVG's own background rect is what shows the color.
+            // If #calendarBackground itself needs to change color (e.g., for areas outside SVG), do:
+            // calendarBackground.style.backgroundColor = backgroundColor;
+        }
+
+    } catch (error) {
+        console.error("Error generating calendar:", error);
+        errorMessageContainer.innerHTML = `<p>Error generating calendar: ${error.message}</p>`;
+        errorMessageContainer.style.display = 'block';
+        svgContainer.innerHTML = ''; // Clear SVG container on error
+        downloadLink.style.display = 'none'; // Hide download link on error
+    }
+}
+
+// Event listener for toggling parameters flap
+toggleParametersButton.addEventListener('click', () => {
+    parametersFlap.classList.toggle('hidden');
+    if (parametersFlap.classList.contains('hidden')) {
+        toggleParametersButton.textContent = 'Show Parameters';
+    } else {
+        toggleParametersButton.textContent = 'Hide Parameters';
+    }
 });
+
+// Add event listeners to form inputs for automatic regeneration
+const formInputs = calendarForm.querySelectorAll('input, select');
+formInputs.forEach(input => {
+    input.addEventListener('input', () => { // 'input' for text/number, works for select too
+        // For select, 'change' is more traditional but 'input' often works
+        // Debounce or throttle this if performance becomes an issue with rapid changes
+        generateAndDisplayCalendar();
+    });
+});
+
+// Initial calendar generation on page load
+document.addEventListener('DOMContentLoaded', () => {
+    // Set initial button text based on flap visibility (assuming it's visible by default)
+    if (parametersFlap.classList.contains('hidden')) {
+        toggleParametersButton.textContent = 'Show Parameters';
+    } else {
+        toggleParametersButton.textContent = 'Hide Parameters';
+    }
+    generateAndDisplayCalendar(); // This will call applyZoom internally
+    // calendarBackground.style.cursor = 'grab'; // REMOVED: No longer needed for JS panning
+});
+
+// Zoom functionality
+zoomInButton.addEventListener('click', () => {
+    currentZoom += zoomStep;
+    applyZoom();
+});
+
+zoomOutButton.addEventListener('click', () => {
+    currentZoom = Math.max(0.1, currentZoom - zoomStep); // Prevent zoom from becoming too small
+    applyZoom();
+});
+
+// Pan functionality (REMOVED - native scroll is used)
+
+
+// The old generateButton and its listener are removed as the button itself is gone from HTML.
