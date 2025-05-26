@@ -106,6 +106,41 @@ function add_colors(color1_rgb, color2_rgb) {
 
 
 function createCalendar(parameters) {
+    /*
+    The spiral starts in the middle and spirals outwards.
+    For once we ignore the square transformation and just look at the spiral within the circle of radius 1.
+    The spiral line between the boxes is defined by the following parameters:
+        The parameter current_line_turns defines the number of turns of the line inbetween the day boxes from the origin to the current position.
+        The parameter total_line_turns defines the number of turns when the line intersects the circle of radius 1.
+        The parameter current_line_radius defines the distance from the origin to the current position of the line.
+            current_line_radius = current_line_turns / total_line_turns
+        The parameter current_line_distance defines the distance from the origin to the current position of the line.
+            current_line_distance = integral_{0}^{current_line_turns}{(2 * pi * current_line_radius') d(current_line_turns')}
+                                = current_line_turns^2 / total_line_turns * pi
+    The spiral of boxes is bounded by the spiral line at the inner and outer side.
+    The spiral of boxes is defined by the following parameters:
+        The parameter total_box_count defines the number of boxes in the spiral.
+        The parameter outer_box_start_turns is the number of turns on the line where the outer side of the first box starts.
+            It has to be at least 1 because the inner side of the first box is one turn before the outer side.
+        The parameter outer_box_end_turns is the number of turns on the line where the outer side of the last box ends.
+            This can be larger than total_line_turns. In this case the outer spial boxes fade out the image.
+        The parameter total_box_turns is the number of turns from the beginning of the first box to the end of the last box.
+            total_box_turns = outer_box_end_turns - outer_box_start_turns
+        The parameter additional_turns is the difference between the outer_box_end_turns and the total_line_turns.
+            additional_turns = outer_box_end_turns - total_line_turns
+        The parameter total_box_distance is the distance on the outer line from the beginning of the first box to the end of the last box.
+            total_box_distance = integral_{outer_box_start_turns}^{outer_box_end_turns}{(2 * pi * current_line_radius') d(current_line_turns')}
+                               = (outer_box_end_turns^2 - outer_box_start_turns^2) / total_line_turns * pi
+        The parameter box_width is the width of the boxes in the spiral measured at the outer side.
+            box_width = total_box_distance / total_box_count
+
+    The input parameters are:
+        total_box_turns (this parameter is actually called "total turns" in the input)
+        total_box_count (this parameter is actually called "total days" in the input)
+        additional_turns (this parameter is actually called "turns beyond the image border")
+        empty_turns_in_the_middle (this parameter is actually called "empty turns in the middle" in the input)
+            This is defined as outer_box_start_turns - 1.
+    */
     const current_month_names = MONTH_NAMES[parameters.language] || MONTH_NAMES["en"];
 
     // Retrieve Parameters (Subtask Item 1)
