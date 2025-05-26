@@ -576,5 +576,68 @@ zoomOutButton.addEventListener('click', () => {
 
 // Pan functionality (REMOVED - native scroll is used)
 
+// Drag-to-scroll functionality
+let isDragging = false;
+let initialClientX = 0;
+let initialClientY = 0;
+let initialScrollLeft = 0;
+let initialScrollTop = 0;
+
+if (zoomableScrollableContainer && calendarBackground) {
+    zoomableScrollableContainer.addEventListener('mousedown', (event) => {
+        isDragging = true;
+        initialClientX = event.clientX;
+        initialClientY = event.clientY;
+        initialScrollLeft = calendarBackground.scrollLeft;
+        initialScrollTop = calendarBackground.scrollTop;
+        calendarBackground.style.cursor = 'grabbing'; // Target calendarBackground for cursor
+        event.preventDefault(); // Prevent text selection, etc.
+    });
+
+    // Attach mousemove to document for smoother dragging even if cursor leaves the container
+    document.addEventListener('mousemove', (event) => {
+        if (!isDragging) return;
+        event.preventDefault(); // Prevent text selection during drag
+
+        const deltaX = event.clientX - initialClientX;
+        const deltaY = event.clientY - initialClientY;
+
+        // Adjust scroll based on delta. Sensitivity is 1:1 with mouse movement.
+        calendarBackground.scrollLeft = initialScrollLeft - deltaX;
+        calendarBackground.scrollTop = initialScrollTop - deltaY;
+    });
+
+    // Attach mouseup to document to catch mouse release anywhere
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            if (calendarBackground) { // Ensure calendarBackground exists
+                calendarBackground.style.cursor = 'grab'; // Target calendarBackground for cursor
+            }
+        }
+    });
+
+    // Handle mouse leaving the container while dragging
+    zoomableScrollableContainer.addEventListener('mouseleave', () => {
+        // No longer needed to set isDragging = false here if mouseup is on document.
+        // However, keeping cursor style change if needed, or if mouseup on document is removed.
+        // For now, if mouseup is on document, this specific handler might not be strictly necessary
+        // for isDragging, but can be kept for cursor or other specific exit behaviors.
+        // If mouseup is on document, dragging continues even if mouse leaves and re-enters.
+        // If user releases mouse button *outside* the window/document, then mouseup might not fire.
+        // This is a general browser behavior.
+        // For this implementation, we assume document mouseup is sufficient.
+        // If isDragging is true and mouse leaves, cursor should remain 'grabbing' until mouse up.
+    });
+
+    // Initial cursor style for the scrollable area
+    if (calendarBackground) { // Ensure calendarBackground exists
+        calendarBackground.style.cursor = 'grab';
+    }
+
+} else {
+    console.error("zoomableScrollableContainer or calendarBackground not found. Drag-to-scroll will not work.");
+}
+
 
 // The old generateButton and its listener are removed as the button itself is gone from HTML.

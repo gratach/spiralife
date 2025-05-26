@@ -35,6 +35,7 @@ body {
     position: relative; /* Important for child positioning if needed, and for transform-origin */
     /* width and height are set by JS */
     /* border: 1px solid red; */ /* Optional: for debugging */
+    cursor: grab; /* Default cursor for the draggable area */
 }
 
 #svgContainer {
