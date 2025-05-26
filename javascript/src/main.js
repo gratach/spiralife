@@ -339,15 +339,11 @@ function createCalendar(parameters) {
 const imageWidthInput = document.getElementById('imageWidth');
 const imageHeightInput = document.getElementById('imageHeight');
 const imageUnitInput = document.getElementById('imageUnit');
-const startYearInput = document.getElementById('startYear');
-const startMonthInput = document.getElementById('startMonth');
-const startDayInput = document.getElementById('startDay');
+const startDateInput = document.getElementById('startDate');
 const totalDaysInput = document.getElementById('totalDays');
 const rotationConstantInput = document.getElementById('rotationConstant');
 const languageInput = document.getElementById('language');
-const specialDayYearInput = document.getElementById('specialDayYear');
-const specialDayMonthInput = document.getElementById('specialDayMonth');
-const specialDayDayInput = document.getElementById('specialDayDay');
+const specialDateInput = document.getElementById('specialDate');
 const backgroundColorInput = document.getElementById('backgroundColor');
 const outputFileNameInput = document.getElementById('outputFileName'); 
 const emptyTurnsInMiddleInput = document.getElementById('emptyTurnsInMiddle');
@@ -400,15 +396,36 @@ function generateAndDisplayCalendar() {
         const imageWidth = parseInt(imageWidthInput.value, 10);
         const imageHeight = parseInt(imageHeightInput.value, 10);
         const imageUnit = imageUnitInput.value;
-        const startYear = parseInt(startYearInput.value, 10);
-        const startMonth = parseInt(startMonthInput.value, 10);
-        const startDay = parseInt(startDayInput.value, 10);
+        const startDateValue = startDateInput.value; // e.g., "2000-01-01"
+        let startYear, startMonth, startDay;
+        if (startDateValue) {
+            const parts = startDateValue.split('-');
+            startYear = parseInt(parts[0], 10);
+            startMonth = parseInt(parts[1], 10); // This is 1-indexed
+            startDay = parseInt(parts[2], 10);
+        } else {
+            // Default values if the date input is somehow empty, though type="date" usually prevents this
+            // Or, rely on the initial value set in DOMContentLoaded
+            startYear = 2000;
+            startMonth = 1; // 1-indexed
+            startDay = 1;
+        }
         const totalDays = parseInt(totalDaysInput.value, 10);
         const rotationConstant = parseFloat(rotationConstantInput.value); // Verified: Already parseFloat
         const language = languageInput.value;
-        const specialDayYear = parseInt(specialDayYearInput.value, 10);
-        const specialDayMonth = parseInt(specialDayMonthInput.value, 10);
-        const specialDayDay = parseInt(specialDayDayInput.value, 10);
+        const specialDateValue = specialDateInput.value; // e.g., "2000-01-01"
+        let specialDayYear, specialDayMonth, specialDayDay;
+        if (specialDateValue) {
+            const parts = specialDateValue.split('-');
+            specialDayYear = parseInt(parts[0], 10);
+            specialDayMonth = parseInt(parts[1], 10); // This is 1-indexed
+            specialDayDay = parseInt(parts[2], 10);
+        } else {
+            // Default values if the date input is somehow empty
+            specialDayYear = 2000;
+            specialDayMonth = 1; // 1-indexed
+            specialDayDay = 1;
+        }
         const backgroundColor = backgroundColorInput.value || '#000000'; // Default to black if empty
         const emptyTurnsInMiddle = parseFloat(emptyTurnsInMiddleInput.value); // Changed to parseFloat
         const additionalTurnsBeyondBorder = parseFloat(additionalTurnsBeyondBorderInput.value); // Changed to parseFloat
@@ -526,6 +543,21 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleParametersButton.textContent = 'Show Parameters';
     } else {
         toggleParametersButton.textContent = 'Hide Parameters';
+    }
+    // Inside DOMContentLoaded
+    if (startDateInput) { // Ensure the element exists
+        // Set a default start date if not already set by the browser or user
+        // The original separate inputs defaulted to 2000-01-01
+        if (!startDateInput.value) {
+             startDateInput.value = "2000-01-01";
+        }
+    }
+    if (specialDateInput) { // Ensure the element exists
+        // Set a default special date if not already set
+        // The original separate inputs defaulted to 2000-01-01
+        if (!specialDateInput.value) {
+            specialDateInput.value = "2000-01-01";
+        }
     }
     generateAndDisplayCalendar(); // This will call applyZoom internally
     // calendarBackground.style.cursor = 'grab'; // REMOVED: No longer needed for JS panning
