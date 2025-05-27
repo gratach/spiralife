@@ -9,8 +9,9 @@
 <body>
     <button id="toggleParametersButton">Hide Parameters</button>
     <div id="parametersFlap">
-        <h1>Spiralife Calendar Generator</h1>
-        <form id="calendarForm">
+        <div id="flapScrollableContent">
+            <h1>Spiralife Calendar Generator</h1>
+            <form id="calendarForm">
             <div>
                 <label for="imageWidth">Image Width:</label>
                 <input type="number" id="imageWidth" name="imageWidth" value="2000">
@@ -65,6 +66,7 @@
                 <input type="text" id="outputFileName" name="outputFileName" value="calendar.svg">
             </div>
         </form>
+        </div>
     </div>
 
     <div id="calendarBackground">

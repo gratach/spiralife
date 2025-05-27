@@ -521,8 +521,12 @@ toggleParametersButton.addEventListener('click', () => {
     parametersFlap.classList.toggle('hidden');
     if (parametersFlap.classList.contains('hidden')) {
         toggleParametersButton.textContent = 'Show Parameters';
+        calendarBackground.style.left = '0';
+        calendarBackground.style.width = '100%';
     } else {
         toggleParametersButton.textContent = 'Hide Parameters';
+        calendarBackground.style.left = '350px';
+        calendarBackground.style.width = 'calc(100% - 350px)';
     }
 });
 
@@ -561,6 +565,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     generateAndDisplayCalendar(); // This will call applyZoom internally
     // calendarBackground.style.cursor = 'grab'; // REMOVED: No longer needed for JS panning
+
+    // Set initial state of calendarBackground based on flap visibility
+    if (parametersFlap.classList.contains('hidden')) {
+        calendarBackground.style.left = '0';
+        calendarBackground.style.width = '100%';
+    } else {
+        calendarBackground.style.left = '350px';
+        calendarBackground.style.width = 'calc(100% - 350px)';
+    }
 });
 
 // Zoom functionality

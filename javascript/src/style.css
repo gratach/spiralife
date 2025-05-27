@@ -20,6 +20,11 @@ body {
     -ms-user-select: none;     /* Internet Explorer/Edge */
 }
 
+#flapScrollableContent {
+    height: 100%; /* Fill the content area of #parametersFlap */
+    overflow-y: auto; /* Enable scrolling for this inner div */
+}
+
 #calendarBackground {
     position: fixed;
     top: 0;
@@ -29,6 +34,7 @@ body {
     overflow: auto; /* This is key for showing scrollbars */
     /* background-color: #eee; */ /* Optional: for debugging viewport */
     z-index: 0; /* Or an appropriate value if other elements are layered */
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out; /* For animation */
 }
 
 #zoomableScrollableContainer {
@@ -62,15 +68,18 @@ body {
     height: 100%;
     width: 350px; /* Adjusted width */
     background-color: #f0f0f0;
-    overflow-y: auto; /* Scrollbar for flap content */
+    /* overflow-y: auto; */ /* Moved to #flapScrollableContent */
     padding: 20px;
+    padding-top: 60px; /* Space for the toggle button */
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     z-index: 50; /* Above calendarBackground but below other controls */
-    transition: left 0.3s ease-in-out; /* Smooth transition for hiding/showing */
+    /* transition: left 0.3s ease-in-out; */ /* Removed, using display: none now */
+    box-sizing: border-box; /* Ensure padding doesn't add to width/height */
 }
 
 #parametersFlap.hidden {
-    left: -350px; /* Slide out of view */
+    display: none; /* Hide when not active */
+    /* left: -350px; */ /* Replaced by display: none */
 }
 
 #parametersFlap h1 {
