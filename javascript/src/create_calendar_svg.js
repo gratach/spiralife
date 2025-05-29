@@ -44,11 +44,20 @@ const MONTH_NAMES = {
     es: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
 };
 
-const weekday_colors = [[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[130, 255, 100],[255, 100, 15]]; // Assuming Sun-Sat order for JS getDay()
-const month_colors = [[2, 100, 255],[44, 120, 210],[33, 180, 100],[100, 240, 120],[230, 222, 90],[255, 140, 0],[255, 0, 0],[190, 180, 0],[200, 180, 100],[190, 210, 100],[150, 150, 150],[70, 90, 120]];
+// Default fallback colors (Sunday to Saturday for weekdays)
+const DEFAULT_WEEKDAY_COLORS = [[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[130, 255, 100],[255, 100, 15]];
+const DEFAULT_MONTH_COLORS = [[2, 100, 255],[44, 120, 210],[33, 180, 100],[100, 240, 120],[230, 222, 90],[255, 140, 0],[255, 0, 0],[190, 180, 0],[200, 180, 100],[190, 210, 100],[150, 150, 150],[70, 90, 120]];
+const DEFAULT_SPECIAL_DAY_COLOR = [255, 255, 0]; // Yellow
 
+// Helper to check if a value is a valid RGB array
+function isValidRgb(rgb) {
+    return Array.isArray(rgb) && rgb.length === 3 && rgb.every(val => typeof val === 'number' && val >= 0 && val <= 255);
+}
 
-
+// Helper to check if an array of colors is valid
+function isValidColorArray(colors, expectedLength) {
+    return Array.isArray(colors) && colors.length === expectedLength && colors.every(isValidRgb);
+}
 // Helper functions translated from Python (Color)
 function to_hex_string(value) {
     const v = Math.max(0, Math.min(255, Math.round(value))); // Ensure value is int 0-255
@@ -109,6 +118,15 @@ export function createCalendarSvg(parameters) {
 
     const image_width = parameters.image_width;
     const image_height = parameters.image_height;
+
+    // Determine active colors to use
+    const active_weekday_colors = isValidColorArray(parameters.weekday_colors_ui, 7)
+                                  ? parameters.weekday_colors_ui
+                                  : DEFAULT_WEEKDAY_COLORS;
+
+    const active_month_colors = isValidColorArray(parameters.month_colors_ui, 12)
+                                ? parameters.month_colors_ui
+                                : DEFAULT_MONTH_COLORS;
 
     let svg_elements_parts = [];
     svg_elements_parts.push(`<svg width="${image_width}${parameters.image_unit}" height="${image_height}${parameters.image_unit}" viewBox="${-image_width/2} ${-image_height/2} ${image_width} ${image_height}" xmlns="http://www.w3.org/2000/svg" version="1.1" baseProfile="full">`);
@@ -194,23 +212,26 @@ export function createCalendarSvg(parameters) {
         let left_to_right_text_rotation_angle = -((theta_for_text / (2 * Math.PI)) % 1) * 360;
         let bottom_to_top_text_rotation_angle = left_to_right_text_rotation_angle + 90;
 
-        let adjusted_weekday_index = (current_date.getDay() + 6) % 7; 
-        let month_index = current_date.getMonth(); 
+        let weekday_idx = current_date.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+        let month_index = current_date.getMonth();
 
         let fill_color_rgb = [
-            Math.floor((weekday_colors[adjusted_weekday_index][0] + month_colors[month_index][0]) / 2),
-            Math.floor((weekday_colors[adjusted_weekday_index][1] + month_colors[month_index][1]) / 2),
-            Math.floor((weekday_colors[adjusted_weekday_index][2] + month_colors[month_index][2]) / 2)
+            Math.floor((active_weekday_colors[weekday_idx][0] + active_month_colors[month_index][0]) / 2),
+            Math.floor((active_weekday_colors[weekday_idx][1] + active_month_colors[month_index][1]) / 2),
+            Math.floor((active_weekday_colors[weekday_idx][2] + active_month_colors[month_index][2]) / 2)
         ];
         
         const date_val = current_date.getDate(); // Use .getDate() for day of the month
 
         // Special Day Highlight & Marker (check month and day, year is for anniversary calculation)
         if (date_val === special_day.getDate() && current_date.getMonth() === special_day.getMonth()) {
-            fill_color_rgb = [255, 255, 0]; // Yellow for special day path segment
-            special_day_markers.push({ 
-                x: center_x, y: center_y, 
-                text: String(current_date.getFullYear() - parameters.special_day_year), 
+            const special_color_to_use = isValidRgb(parameters.special_day_color_ui)
+                                         ? parameters.special_day_color_ui
+                                         : DEFAULT_SPECIAL_DAY_COLOR;
+            fill_color_rgb = special_color_to_use;
+            special_day_markers.push({
+                x: center_x, y: center_y,
+                text: String(current_date.getFullYear() - parameters.special_day_year),
                 rotation: left_to_right_text_rotation_angle, 
                 fontSize: 4, color: [0,0,0] 
             });
