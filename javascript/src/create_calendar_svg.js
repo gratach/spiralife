@@ -44,8 +44,8 @@ const MONTH_NAMES = {
     es: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
 };
 
-const weekday_colors = [[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[130, 255, 100],[255, 100, 15]]; // Assuming Sun-Sat order for JS getDay()
-const month_colors = [[2, 100, 255],[44, 120, 210],[33, 180, 100],[100, 240, 120],[230, 222, 90],[255, 140, 0],[255, 0, 0],[190, 180, 0],[200, 180, 100],[190, 210, 100],[150, 150, 150],[70, 90, 120]];
+//const weekday_colors = [[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[255, 255, 255],[130, 255, 100],[255, 100, 15]]; // Assuming Sun-Sat order for JS getDay()
+//const month_colors = [[2, 100, 255],[44, 120, 210],[33, 180, 100],[100, 240, 120],[230, 222, 90],[255, 140, 0],[255, 0, 0],[190, 180, 0],[200, 180, 100],[190, 210, 100],[150, 150, 150],[70, 90, 120]];
 
 
 
@@ -64,12 +64,32 @@ function complementary_color(color_rgb) {
     ];
 }
 
-function format_color_string(color_rgb) {
+function rgb_to_hex(color_rgb) {
     return `#${to_hex_string(color_rgb[0])}${to_hex_string(color_rgb[1])}${to_hex_string(color_rgb[2])}`;
 }
 
-function format_rgb_string(color_rgb) { // For stroke and fill attributes that take rgb()
-    return `rgb(${Math.round(color_rgb[0])},${Math.round(color_rgb[1])},${Math.round(color_rgb[2])})`;
+function hex_to_rgb(hex) {
+    if (hex.startsWith("#")) {
+        hex = hex.slice(1);
+    }
+    if (hex.length !== 6) {
+        throw new Error("Invalid hex color format");
+    }
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return [r, g, b];
+}
+
+function color_average(color1_hex, color2_hex) {
+    const color1_rgb = hex_to_rgb(color1_hex);
+    const color2_rgb = hex_to_rgb(color2_hex);
+    const average_rgb = [
+        Math.floor((color1_rgb[0] + color2_rgb[0]) / 2),
+        Math.floor((color1_rgb[1] + color2_rgb[1]) / 2),
+        Math.floor((color1_rgb[2] + color2_rgb[2]) / 2)
+    ];
+    return rgb_to_hex(average_rgb);
 }
 
 
@@ -96,6 +116,9 @@ export function createCalendarSvg(parameters) {
     const ui_total_turns = parameters.ui_total_turns;
     const ui_empty_turns = parameters.ui_empty_turns;
     const ui_additional_turns = parameters.ui_additional_turns;
+    const weekday_colors = parameters.weekday_colors;
+    const month_colors = parameters.month_colors;
+    const special_day_color = parameters.special_day_color;
 
     // Calculate Core Spiral Definition Parameters (Subtask Item 2)
     const outer_box_start_turns = ui_empty_turns + 1;
@@ -197,50 +220,44 @@ export function createCalendarSvg(parameters) {
         let adjusted_weekday_index = (current_date.getDay() + 6) % 7; 
         let month_index = current_date.getMonth(); 
 
-        let fill_color_rgb = [
-            Math.floor((weekday_colors[adjusted_weekday_index][0] + month_colors[month_index][0]) / 2),
-            Math.floor((weekday_colors[adjusted_weekday_index][1] + month_colors[month_index][1]) / 2),
-            Math.floor((weekday_colors[adjusted_weekday_index][2] + month_colors[month_index][2]) / 2)
-        ];
+        let fill_color_hex = color_average(weekday_colors[adjusted_weekday_index], month_colors[month_index]);
         
         const date_val = current_date.getDate(); // Use .getDate() for day of the month
 
         // Special Day Highlight & Marker (check month and day, year is for anniversary calculation)
         if (date_val === special_day.getDate() && current_date.getMonth() === special_day.getMonth()) {
-            fill_color_rgb = [255, 255, 0]; // Yellow for special day path segment
+            fill_color_hex = special_day_color; // Yellow for special day path segment
             special_day_markers.push({ 
                 x: center_x, y: center_y, 
                 text: String(current_date.getFullYear() - parameters.special_day_year), 
                 rotation: left_to_right_text_rotation_angle, 
-                fontSize: 4, color: [0,0,0] 
+                fontSize: 4, color: '#000000' 
             });
         }
-        
-        const fill_color_hex = format_color_string(fill_color_rgb);
 
         // Draw path and markers for every day segment (Removed "if (i > 0)" condition - Subtask Item 6)
         svg_elements_parts.push(`<path style="fill:${fill_color_hex};stroke:#000000;stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M ${current_outer_x},${current_outer_y} L ${current_inner_x},${current_inner_y} L ${prev_inner_x},${prev_inner_y} L ${prev_outer_x},${prev_outer_y} Z" />`);
     
         // Day Marker Lines
         if (date_val === 1) {
-                day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: [200,0,0], strokeWidth: 2 });
+                day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: "#c80000", strokeWidth: 2 });
             } else if (date_val % 10 === 1) {
-                day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: [0,0,200], strokeWidth: 1.5 });
+                day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: '#0000c8', strokeWidth: 1.5 });
             } else if (date_val % 5 === 1) {
-                day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: [0,200,0], strokeWidth: 1.4 });
+                day_marker_lines.push({ x1: prev_outer_x, y1: prev_outer_y, x2: prev_inner_x, y2: prev_inner_y, color: '#00c800', strokeWidth: 1.4 });
             }
 
             // Text Elements
             if (date_val % 10 === 0 && date_val > 9) { // day 10, 20, 30
-                 text_elements.push({ x: center_x, y: center_y, text: String(date_val), rotation: bottom_to_top_text_rotation_angle, fontSize: 4, color: [0,0,200] });
+                 text_elements.push({ x: center_x, y: center_y, text: String(date_val), rotation: bottom_to_top_text_rotation_angle, fontSize: 4, color: '#0000c8' });
             } else if (date_val % 5 === 0 && date_val > 9) { // day 15, 25 (but not 10,20,30)
-                 text_elements.push({ x: center_x, y: center_y, text: String(date_val), rotation: bottom_to_top_text_rotation_angle, fontSize: 4, color: [0,100,0] });
+                 text_elements.push({ x: center_x, y: center_y, text: String(date_val), rotation: bottom_to_top_text_rotation_angle, fontSize: 4, color: '#00c800' });
             }
 
             if (date_val >= 1 && date_val <= 3) { // 1st, 2nd, 3rd day of month
                 const month_char = current_month_names[month_index][date_val - 1];
                 if (month_char) { // Ensure character exists
-                    text_elements.push({ x: center_x, y: center_y, text: month_char, rotation: left_to_right_text_rotation_angle, fontSize: 6, color: [0,0,0] });
+                    text_elements.push({ x: center_x, y: center_y, text: month_char, rotation: left_to_right_text_rotation_angle, fontSize: 6, color: '#000000' });
                 }
             }
             
@@ -248,7 +265,7 @@ export function createCalendarSvg(parameters) {
                 const year_char_index = date_val - 5;
                 const year_str = String(current_date.getFullYear());
                 if (year_char_index < year_str.length) {
-                    text_elements.push({ x: center_x, y: center_y, text: year_str[year_char_index], rotation: left_to_right_text_rotation_angle, fontSize: 7, color: [0,0,0] });
+                    text_elements.push({ x: center_x, y: center_y, text: year_str[year_char_index], rotation: left_to_right_text_rotation_angle, fontSize: 7, color: '#000000' });
                 }
             }
         // The closing brace for the removed "if (i > 0)" is now correctly removed by not including it here.
@@ -266,17 +283,17 @@ export function createCalendarSvg(parameters) {
 
     // Process day_marker_lines
     day_marker_lines.forEach(line => {
-        svg_elements_parts.push(`<line style="stroke:${format_color_string(line.color)};stroke-width:${line.strokeWidth}px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" />`);
+        svg_elements_parts.push(`<line style="stroke:${line.color};stroke-width:${line.strokeWidth}px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" />`);
     });
 
     // Process text_elements
     text_elements.forEach(text => {
-        svg_elements_parts.push(`<text transform="translate(${text.x}, ${text.y}) rotate(${text.rotation})" font-family="sans-serif" font-size="${text.fontSize}px" fill="${format_color_string(text.color)}" text-anchor="middle" dominant-baseline="central">${text.text}</text>`);
+        svg_elements_parts.push(`<text transform="translate(${text.x}, ${text.y}) rotate(${text.rotation})" font-family="sans-serif" font-size="${text.fontSize}px" fill="${text.color}" text-anchor="middle" dominant-baseline="central">${text.text}</text>`);
     });
 
     // Process special_day_markers
     special_day_markers.forEach(marker => {
-        svg_elements_parts.push(`<text transform="translate(${marker.x}, ${marker.y}) rotate(${marker.rotation})" font-family="sans-serif" font-size="${marker.fontSize}px" fill="${format_color_string(marker.color)}" text-anchor="middle" dominant-baseline="central">${marker.text}</text>`);
+        svg_elements_parts.push(`<text transform="translate(${marker.x}, ${marker.y}) rotate(${marker.rotation})" font-family="sans-serif" font-size="${marker.fontSize}px" fill="${marker.color}" text-anchor="middle" dominant-baseline="central">${marker.text}</text>`);
     });
 
     svg_elements_parts.push("</svg>");

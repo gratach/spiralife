@@ -19,13 +19,10 @@ export function loadAppElements(){
     app.calendarForm = document.getElementById('calendarForm'); // Added for easy access to form inputs
 
     // Weekday color inputs
-    app.mondayColorInput = document.getElementById('mondayColor');
-    app.tuesdayColorInput = document.getElementById('tuesdayColor');
-    app.wednesdayColorInput = document.getElementById('wednesdayColor');
-    app.thursdayColorInput = document.getElementById('thursdayColor');
-    app.fridayColorInput = document.getElementById('fridayColor');
-    app.saturdayColorInput = document.getElementById('saturdayColor');
-    app.sundayColorInput = document.getElementById('sundayColor');
+    const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    weekdays.forEach(day => {
+        app[day + 'ColorInput'] = document.getElementById(day + 'Color');
+    });
 
     // Month color inputs
     const monthIds = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
