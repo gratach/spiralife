@@ -1,6 +1,20 @@
 import {createCalendarSvg} from './create_calendar_svg.js'
 import { applyZoom } from './apply_zoom.js';
 
+// Helper function to convert Hex to RGB
+function hexToRgb(hex) {
+    if (!hex) return null;
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+    ] : null;
+}
+
 // Function to generate and display the calendar
 export function updateCalendarView(app) {
     try {
@@ -65,9 +79,49 @@ export function updateCalendarView(app) {
         }
         // Add more specific day validation based on month/year if needed
 
+        // Collect UI colors
+        const defaultRgbWeekday = [255, 255, 255];
+        const weekday_colors_rgb_ui = [
+            hexToRgb(app.sundayColorInput.value) || defaultRgbWeekday,
+            hexToRgb(app.mondayColorInput.value) || defaultRgbWeekday,
+            hexToRgb(app.tuesdayColorInput.value) || defaultRgbWeekday,
+            hexToRgb(app.wednesdayColorInput.value) || defaultRgbWeekday,
+            hexToRgb(app.thursdayColorInput.value) || defaultRgbWeekday,
+            hexToRgb(app.fridayColorInput.value) || defaultRgbWeekday,
+            hexToRgb(app.saturdayColorInput.value) || defaultRgbWeekday,
+        ];
+        try {
+            localStorage.setItem('spiralCalendar.weekdayColors', JSON.stringify(weekday_colors_rgb_ui));
+        } catch (e) {
+            console.warn('Failed to save weekday colors to localStorage:', e);
+        }
+
+        const defaultRgbMonth = [200, 200, 200];
+        const month_colors_rgb_ui = [];
+        const monthIds = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        monthIds.forEach(monthId => {
+            month_colors_rgb_ui.push(hexToRgb(app[monthId + 'ColorInput'].value) || defaultRgbMonth);
+        });
+        try {
+            localStorage.setItem('spiralCalendar.monthColors', JSON.stringify(month_colors_rgb_ui));
+        } catch (e) {
+            console.warn('Failed to save month colors to localStorage:', e);
+        }
+
+        const defaultRgbSpecialDay = [255, 255, 0];
+        const special_day_color_rgb_ui = hexToRgb(app.specialDayColorInput.value) || defaultRgbSpecialDay;
+        try {
+            localStorage.setItem('spiralCalendar.specialDayColor', JSON.stringify(special_day_color_rgb_ui));
+        } catch (e) {
+            console.warn('Failed to save special day color to localStorage:', e);
+        }
+
         const calendarParameters = {
             image_width: imageWidth,
             image_height: imageHeight,
+            weekday_colors_from_ui: weekday_colors_rgb_ui, // Added
+            month_colors_from_ui: month_colors_rgb_ui,     // Added
+            special_day_color_from_ui: special_day_color_rgb_ui, // Added
             image_unit: imageUnit,
             start_year: startYear,
             start_month: startMonth,
