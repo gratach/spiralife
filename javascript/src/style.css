@@ -219,11 +219,18 @@ body {
         top: 0;
         left: 0; /* Explicitly set, though inherited */
         width: 100%; /* Full width on smaller screens */
-        height: auto; /* Auto height based on content */
-        max-height: 50vh; /* Limit height to 50% of viewport height */
+        /* height: auto; Removed */
+        /* max-height: 50vh; Removed */
+        height: 50vh; /* Fixed height for the flex container */
         bottom: auto; /* Override main style if it was 'bottom:0' */
         box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Shadow at the bottom */
-        overflow-y: auto; /* Enable scrolling on the flap itself if content exceeds max-height */
+
+        display: flex;
+        flex-direction: column;
+        /* overflow-y: auto; was here, removed to let #flapScrollableContent handle scrolling. */
+        /* Global styles for padding (padding: 20px; padding-top: 60px;) and box-sizing: border-box remain active.
+           #flapScrollableContent (with height: 100% and overflow-y: auto) will fill the content-box area
+           of this flex container, respecting its parent's padding. */
     }
 
     /* #parametersFlap.hidden will rely on the global rule: #parametersFlap.hidden { display: none; } */
