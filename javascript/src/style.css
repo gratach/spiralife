@@ -216,31 +216,53 @@ body {
 /* Responsive considerations (optional for now, but good to keep in mind) */
 @media (max-width: 768px) {
     #parametersFlap {
+        top: 0;
+        left: 0; /* Explicitly set, though inherited */
         width: 100%; /* Full width on smaller screens */
-        height: 50%; /* Or a portion of the height */
-        bottom: 0;
-        top: auto; /* Override top:0 */
-        box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* Shadow on top */
+        height: auto; /* Auto height based on content */
+        max-height: 50vh; /* Limit height to 50% of viewport height */
+        bottom: auto; /* Override main style if it was 'bottom:0' */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Shadow at the bottom */
+        overflow-y: auto; /* Enable scrolling on the flap itself if content exceeds max-height */
     }
 
-    #parametersFlap.hidden {
-        left: 0; /* Keep at left */
-        bottom: -100%; /* Slide down out of view */
-    }
+    /* #parametersFlap.hidden will rely on the global rule: #parametersFlap.hidden { display: none; } */
+    /* No specific styles for .hidden needed here if display:none is the strategy. */
+    /* If a slide-from-top animation was desired, we would add:
+    /* #parametersFlap.hidden { top: -100%; transform: translateY(-100%); } */
+    /* and JS would need to toggle a different class or directly manipulate 'top' or 'transform'. */
+    /* For now, sticking to display:none as per wide-screen behavior. */
+
 
     #toggleParametersButton {
-        /* Adjust if needed for new flap position on mobile */
+        /* No changes needed, existing fixed positioning (top: 15px; left: 15px;) should work. */
+        /* Ensure padding-top on #parametersFlap is sufficient if this button is considered inside it. */
+        /* Current #parametersFlap padding-top: 60px; should be fine. */
     }
 
     #downloadLink {
-        /* Might need adjustment if flap is at bottom */
-        bottom: calc(50% + 20px); /* Example: if flap is 50% height */
+        bottom: 20px; /* Ensure it's at the bottom of the viewport */
+        /* left: 50%; transform: translateX(-50%); are already set globally */
     }
     
     #zoomControls { /* Responsive styles for zoom controls */
-         /* Might need adjustment if flap is at bottom and parametersFlap is visible */
-        bottom: calc(50% + 20px); 
+        bottom: 20px; /* Ensure it's at the bottom of the viewport */
+        /* right: 20px; is already set globally */
     }
+
+    /* #calendarBackground will be handled by JavaScript for top/height adjustments */
+    /* Example JS logic:
+       const flapRect = parametersFlap.getBoundingClientRect();
+       if (parametersFlap.style.display !== 'none') {
+           calendarBackground.style.top = flapRect.height + 'px';
+           calendarBackground.style.height = `calc(100% - ${flapRect.height}px)`;
+       } else {
+           calendarBackground.style.top = '0px';
+           calendarBackground.style.height = '100%';
+       }
+       calendarBackground.style.left = '0px';
+       calendarBackground.style.width = '100%';
+    */
 
     #calendarForm input[type="number"],
     #calendarForm input[type="text"],

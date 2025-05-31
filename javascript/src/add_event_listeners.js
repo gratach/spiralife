@@ -1,20 +1,55 @@
 import {applyZoom} from "./apply_zoom";
 import {updateCalendarView} from './update_calendar_view.js';
 
+// Function to adjust layout based on screen width and flap visibility
+function adjustLayout(app) {
+    const isNarrow = window.matchMedia('(max-width: 768px)').matches;
+    const isFlapHidden = app.parametersFlap.classList.contains('hidden');
+
+    // Get flap dimensions only if visible, otherwise 0.
+    // offsetHeight will give current rendered height, which is good.
+    // offsetWidth for wide screen.
+    const flapHeight = isNarrow && !isFlapHidden ? app.parametersFlap.offsetHeight : 0;
+    // For wide screens, use a fixed width or app.parametersFlap.offsetWidth if it's reliable when visible.
+    // Sticking to 350px as it was previously hardcoded for wide screen visible flap.
+    const flapWidthWide = !isNarrow && !isFlapHidden ? 350 : 0;
+
+
+    if (isNarrow) {
+        if (isFlapHidden) {
+            app.calendarBackground.style.top = '0px';
+            app.calendarBackground.style.height = '100%';
+        } else {
+            app.calendarBackground.style.top = flapHeight + 'px';
+            app.calendarBackground.style.height = 'calc(100% - ' + flapHeight + 'px)';
+        }
+        app.calendarBackground.style.left = '0px';
+        app.calendarBackground.style.width = '100%';
+    } else { // Wide screen
+        if (isFlapHidden) {
+            app.calendarBackground.style.left = '0px';
+            app.calendarBackground.style.width = '100%';
+        } else {
+            app.calendarBackground.style.left = flapWidthWide + 'px';
+            app.calendarBackground.style.width = 'calc(100% - ' + flapWidthWide + 'px)';
+        }
+        app.calendarBackground.style.top = '0px';
+        app.calendarBackground.style.height = '100%';
+    }
+}
+
 export function addEventListeners(app){
-    // Function to apply zoom
     // Event listener for toggling parameters flap
     app.toggleParametersButton.addEventListener('click', () => {
         app.parametersFlap.classList.toggle('hidden');
+        // Update button text based on flap visibility
         if (app.parametersFlap.classList.contains('hidden')) {
             app.toggleParametersButton.textContent = 'Show Parameters';
-            app.calendarBackground.style.left = '0';
-            app.calendarBackground.style.width = '100%';
         } else {
             app.toggleParametersButton.textContent = 'Hide Parameters';
-            app.calendarBackground.style.left = '350px';
-            app.calendarBackground.style.width = 'calc(100% - 350px)';
         }
+        // Adjust layout after toggling
+        adjustLayout(app);
     });
 
     // Add event listeners to form inputs for automatic regeneration
@@ -29,39 +64,29 @@ export function addEventListeners(app){
 
     // Initial calendar generation on page load
     document.addEventListener('DOMContentLoaded', () => {
-        // Set initial button text based on flap visibility (assuming it's visible by default)
+        // Set initial button text based on flap visibility (assuming it's visible by default unless CSS hides it)
         if (app.parametersFlap.classList.contains('hidden')) {
             app.toggleParametersButton.textContent = 'Show Parameters';
         } else {
             app.toggleParametersButton.textContent = 'Hide Parameters';
         }
-        // Inside DOMContentLoaded
-        if (app.startDateInput) { // Ensure the element exists
-            // Set a default start date if not already set by the browser or user
-            // The original separate inputs defaulted to 2000-01-01
-            if (!app.startDateInput.value) {
-                app.startDateInput.value = "2000-01-01";
-            }
-        }
-        if (app.specialDateInput) { // Ensure the element exists
-            // Set a default special date if not already set
-            // The original separate inputs defaulted to 2000-01-01
-            if (!app.specialDateInput.value) {
-                app.specialDateInput.value = "2000-01-01";
-            }
-        }
-        updateCalendarView(app); // This will call applyZoom internally
-        // app.calendarBackground.style.cursor = 'grab'; // REMOVED: No longer needed for JS panning
 
-        // Set initial state of app.calendarBackground based on flap visibility
-        if (app.parametersFlap.classList.contains('hidden')) {
-            app.calendarBackground.style.left = '0';
-            app.calendarBackground.style.width = '100%';
-        } else {
-            app.calendarBackground.style.left = '350px';
-            app.calendarBackground.style.width = 'calc(100% - 350px)';
+        // Set default dates if not already set
+        if (app.startDateInput && !app.startDateInput.value) {
+            app.startDateInput.value = "2000-01-01";
         }
+        if (app.specialDateInput && !app.specialDateInput.value) {
+            app.specialDateInput.value = "2000-01-01";
+        }
+
+        updateCalendarView(app); // This will call applyZoom internally
+
+        // Set initial layout
+        adjustLayout(app);
     });
+
+    // Adjust layout on window resize
+    window.addEventListener('resize', () => adjustLayout(app));
 
     // Zoom functionality
     app.zoomInButton.addEventListener('click', () => {
