@@ -1,13 +1,17 @@
-# Spiralife Calendar Generator - Web Version
+![Spiral Calendar](images/calendar.png)
+
+# Spiralife Calendar Generator
 
 ## Description
 
 This project generates a visually unique spiral calendar as an SVG image. It is a JavaScript port of an original Python project, designed to run directly in a web browser. The generated calendar visualizes a span of days in a continuous spiral, with customizable colors, date ranges, and highlighting for special occasions.
 
+A online demo is availabe at [spiralife.debablo.de](https://spiralife.debablo.de)
+
 ## How to Use
 
 **Install Dependencies and Build:**
-    *   Open a terminal and navigate to the `javascript` directory.
+    *   Open the folder of this repository in a terminal.
     *   Run the following commands:
          ```bash
          npm install .
@@ -16,7 +20,7 @@ This project generates a visually unique spiral calendar as an SVG image. It is 
     *   This will install the necessary dependencies and build the project.
 
 2.  **Open the Application:**
-    *   Navigate to the `javascript/dist/` directory in your local copy of the repository.
+    *   Navigate to the `dist/` directory in your local copy of the repository.
     *   Open the `index.html` file in a modern web browser (e.g., Chrome, Firefox, Safari, Edge).
 
 3.  **Configure Your Calendar:**

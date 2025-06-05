@@ -1,7 +1,0 @@
-*.pdf
-*.egg-info
-__pycache__/
-old/
-build/
-dist/
-
