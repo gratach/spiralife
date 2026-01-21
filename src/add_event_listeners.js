@@ -1,4 +1,4 @@
-import {applyZoom} from "./apply_zoom";
+import {applyZoom} from "./apply_zoom.js";
 import {updateCalendarView} from './update_calendar_view.js';
 
 // Function to adjust layout based on screen width and flap visibility
