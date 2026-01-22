@@ -2,6 +2,8 @@ import { Builder, By, until } from 'selenium-webdriver';
 import firefox from 'selenium-webdriver/firefox';
 import { exec } from 'child_process';
 import path from 'path';
+import fs from 'fs/promises';
+import os from 'os';
 import express from 'express';
 import { jest } from '@jest/globals';
 import { fileURLToPath } from 'url';
@@ -12,13 +14,15 @@ jest.setTimeout(30000); // Selenium braucht oft mehr Zeit
 
 let driver;
 let server;
+let testTempDir;
 
 import webpack from 'webpack';
 import config from '../webpack.config.cjs'; // CommonJS Config
 
-function buildWebpack() {
+function buildWebpack(dir) {
   return new Promise((resolve, reject) => {
-    webpack(config, (err, stats) => {
+    const modifiedConfig = { ...config, output: { ...config.output, path: dir } };
+    webpack(modifiedConfig, (err, stats) => {
       if (err) return reject(err);
       if (stats.hasErrors()) return reject(new Error(stats.toString()));
       console.log(stats.toString({ colors: true }));
@@ -28,30 +32,37 @@ function buildWebpack() {
 }
 
 beforeAll(async () => {
-  // Build the webpack project
-  await buildWebpack();
+    // Create temporary directory for test if needed
+    testTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'webpack-test-'));
 
-  // Start Express server to serve the built files
-  const app = express();
-  const distPath = path.resolve(__dirname, '../dist');
-  app.use(express.static(distPath));
-  server = app.listen(3000);
+    // Build the webpack project
+    await buildWebpack(testTempDir);
 
-  // Set up Selenium WebDriver with Firefox
-  const options = new firefox.Options();
-  driver = await new Builder()
-    .forBrowser('firefox')
-    .setFirefoxOptions(options)
-    .build();
+    // Start Express server to serve the built files
+    const app = express();
+    const distPath = testTempDir; // Serve from temporary build directory
+    app.use(express.static(distPath));
+    server = app.listen(3000);
+
+    // Set up Selenium WebDriver with Firefox
+    const options = new firefox.Options();
+    driver = await new Builder()
+        .forBrowser('firefox')
+        .setFirefoxOptions(options)
+        .build();
 });
 
 afterAll(async () => {
-  if (driver) await driver.quit();
-  if (server) server.close();
+    if (driver) await driver.quit();
+    if (server) server.close();
+    // Clean up temporary directory
+    if (testTempDir){
+        await fs.rm(testTempDir, { recursive: true, force: true });
+    }
 });
 
 test('should load the webpack application', async () => {
-  await driver.get('http://localhost:3000');
-  const title = await driver.getTitle();
-  expect(title).toBe('Calendar Generator');
+    await driver.get('http://localhost:3000');
+    const title = await driver.getTitle();
+    expect(title).toBe('Calendar Generator');
 });
