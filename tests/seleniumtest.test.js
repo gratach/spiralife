@@ -46,6 +46,7 @@ beforeAll(async () => {
 
     // Set up Selenium WebDriver with Firefox
     const options = new firefox.Options();
+    options.addArguments('-headless');
     driver = await new Builder()
         .forBrowser('firefox')
         .setFirefoxOptions(options)
